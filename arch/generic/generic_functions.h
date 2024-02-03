@@ -38,7 +38,7 @@ uint32_t compare256_unaligned_16(const uint8_t *src0, const uint8_t *src1);
 #  endif
 #endif
 
-typedef void    (*slide_hash_func)(deflate_state *s);
+typedef void (*slide_hash_func)(deflate_state *s);
 
 void     insert_string_c(deflate_state *const s, const uint32_t str, uint32_t count);
 Pos      quick_insert_string_c(deflate_state *const s, const uint32_t str);
@@ -85,6 +85,28 @@ uint32_t longest_match_slow_c(deflate_state *const s, Pos cur_match);
 #  define longest_match_generic longest_match_c
 #  define longest_match_slow_generic longest_match_slow_c
 #  define compare256_generic compare256_c
+#endif
+
+
+#ifdef DISABLE_RUNTIME_CPU_DETECTION
+// Generic code
+#  define native_adler32 adler32_c
+#  define native_adler32_fold_copy adler32_fold_copy_c
+#  define native_chunkmemset_safe chunkmemset_safe_c
+#  define native_chunksize chunksize_c
+#  define native_crc32 PREFIX(crc32_braid)
+#  define native_crc32_fold crc32_fold_c
+#  define native_crc32_fold_copy crc32_fold_copy_c
+#  define native_crc32_fold_final crc32_fold_final_c
+#  define native_crc32_fold_reset crc32_fold_reset_c
+#  define native_inflate_fast inflate_fast_c
+#  define native_insert_string insert_string_c
+#  define native_quick_insert_string quick_insert_string_c
+#  define native_slide_hash slide_hash_c
+#  define native_update_hash update_hash_c
+#  define native_longest_match longest_match_generic
+#  define native_longest_match_slow longest_match_slow_generic
+#  define native_compare256 compare256_generic
 #endif
 
 #endif
