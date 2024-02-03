@@ -7,10 +7,7 @@
 #define FUNCTABLE_H_
 
 #include "deflate.h"
-#include "crc32_fold_c.h"
-#include "adler32_fold_c.h"
-#include "inftrees.h"
-#include "inflate.h"
+#include "crc32.h"
 
 struct functable_s {
     void     (* force_init)         (void);
