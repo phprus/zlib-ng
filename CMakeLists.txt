@@ -257,17 +257,19 @@ endif()
 
 # Set native march/mcpu
 if(WITH_NATIVE_INSTRUCTIONS)
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-        check_c_compiler_flag(-march=native HAVE_MARCH_NATIVE)
-        if(HAVE_MARCH_NATIVE)
-            set(NATIVEFLAG "-march=native")
-        else()
-            check_c_compiler_flag(-mcpu=native HAVE_MCPU_NATIVE)
-            if(HAVE_MCPU_NATIVE)
-                set(NATIVEFLAG "-mcpu=native")
+    if(NOT NATIVEFLAG)
+        if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+            check_c_compiler_flag(-march=native HAVE_MARCH_NATIVE)
+            if(HAVE_MARCH_NATIVE)
+                set(NATIVEFLAG "-march=native")
+            else()
+                check_c_compiler_flag(-mcpu=native HAVE_MCPU_NATIVE)
+                if(HAVE_MCPU_NATIVE)
+                    set(NATIVEFLAG "-mcpu=native")
+                endif()
             endif()
+            # Fall through
         endif()
-        # Fall through
     endif()
     if(NATIVEFLAG)
         # Apply flag to all source files and compilation checks

@@ -6,6 +6,18 @@
 #ifndef CPU_FUNCTIONS_H_
 #define CPU_FUNCTIONS_H_
 
+// Workaround for MSVC. By default MSVC not defined __SSE*__ macros.
+// Fix it if AVX enabled.
+#if defined(_MSC_VER) && !defined(__clang__) && defined(__AVX__)
+#  define __SSE__ 1
+#  define __SSE2__ 1
+#  define __SSE3__ 1
+#  define __SSSE3__ 1
+#  define __SSE4_1__ 1
+#  define __SSE4_2__ 1
+#  define __PCLMUL__ 1
+#endif
+
 #include "zbuild.h"
 #include "zutil.h"
 #include "crc32.h"
