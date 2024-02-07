@@ -11,7 +11,7 @@
 
 #ifdef DISABLE_RUNTIME_CPU_DETECTION
 
-#  include "cpu_functions.h"
+#  include "arch_functions.h"
 
 /* When compiling with native instructions it is not necessary to use functable.
  * Instead we use native_ macro indicating the best available variant of arch-specific
