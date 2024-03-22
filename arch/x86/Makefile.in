@@ -13,7 +13,7 @@ AVX512VNNIFLAG=-mavx512vnni
 AVX2FLAG=-mavx2
 SSE2FLAG=-msse2
 SSSE3FLAG=-mssse3
-SSE42FLAG=-msse4.2
+SSE41FLAG=-msse4.1
 PCLMULFLAG=-mpclmul
 VPCLMULFLAG=-mvpclmulqdq
 XSAVEFLAG=-mxsave
@@ -28,7 +28,7 @@ all: \
 	adler32_avx2.o adler32_avx2.lo \
 	adler32_avx512.o adler32_avx512.lo \
 	adler32_avx512_vnni.o adler32_avx512_vnni.lo \
-	adler32_sse42.o adler32_sse42.lo \
+	adler32_sse41.o adler32_sse41.lo \
 	adler32_ssse3.o adler32_ssse3.lo \
 	chunkset_avx2.o chunkset_avx2.lo \
 	chunkset_sse2.o chunkset_sse2.lo \
@@ -77,10 +77,10 @@ compare256_sse2.lo:
 	$(CC) $(SFLAGS) $(SSE2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/compare256_sse2.c
 
 crc32_pclmulqdq.o:
-	$(CC) $(CFLAGS) $(PCLMULFLAG) $(SSE42FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_pclmulqdq.c
+	$(CC) $(CFLAGS) $(PCLMULFLAG) $(SSE41FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_pclmulqdq.c
 
 crc32_pclmulqdq.lo:
-	$(CC) $(SFLAGS) $(PCLMULFLAG) $(SSE42FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_pclmulqdq.c
+	$(CC) $(SFLAGS) $(PCLMULFLAG) $(SSE41FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_pclmulqdq.c
 
 crc32_vpclmulqdq.o:
 	$(CC) $(CFLAGS) $(PCLMULFLAG) $(VPCLMULFLAG) $(AVX512FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_vpclmulqdq.c
@@ -124,11 +124,11 @@ adler32_ssse3.o: $(SRCDIR)/adler32_ssse3.c
 adler32_ssse3.lo: $(SRCDIR)/adler32_ssse3.c
 	$(CC) $(SFLAGS) $(SSSE3FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_ssse3.c
 
-adler32_sse42.o: $(SRCDIR)/adler32_sse42.c
-	$(CC) $(CFLAGS) $(SSE42FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_sse42.c
+adler32_sse41.o: $(SRCDIR)/adler32_sse41.c
+	$(CC) $(CFLAGS) $(SSE41FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_sse41.c
 
-adler32_sse42.lo: $(SRCDIR)/adler32_sse42.c
-	$(CC) $(SFLAGS) $(SSE42FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_sse42.c
+adler32_sse41.lo: $(SRCDIR)/adler32_sse41.c
+	$(CC) $(SFLAGS) $(SSE41FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_sse41.c
 
 mostlyclean: clean
 clean:

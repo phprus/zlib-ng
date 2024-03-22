@@ -15,7 +15,7 @@
 #include "adler32_avx2_p.h"
 #include "x86_intrins.h"
 
-extern uint32_t adler32_fold_copy_sse42(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len);
+extern uint32_t adler32_fold_copy_sse41(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len);
 extern uint32_t adler32_ssse3(uint32_t adler, const uint8_t *src, size_t len);
 
 static inline uint32_t adler32_fold_copy_impl(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len, const int COPY) {
@@ -35,7 +35,7 @@ rem_peel:
         }
     } else if (len < 32) {
         if (COPY) {
-            return adler32_fold_copy_sse42(adler, dst, src, len);
+            return adler32_fold_copy_sse41(adler, dst, src, len);
         } else {
             return adler32_ssse3(adler, src, len);
         }

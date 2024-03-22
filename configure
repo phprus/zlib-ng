@@ -111,7 +111,7 @@ avx512vnniflag="${avx512flag} -mavx512vnni"
 avx2flag="-mavx2"
 sse2flag="-msse2"
 ssse3flag="-mssse3"
-sse42flag="-msse4.2"
+sse41flag="-msse4.1"
 pclmulflag="-mpclmul"
 vpclmulflag="-mvpclmulqdq -mavx512f"
 xsaveflag="-mxsave"
@@ -1371,19 +1371,19 @@ EOF
     fi
 }
 
-check_sse42_intrinsics() {
-    # Check whether compiler supports SSE4.2 intrinsics
+check_sse41_intrinsics() {
+    # Check whether compiler supports SSE4.1 intrinsics
     cat > $test.c << EOF
 #include <nmmintrin.h>
-unsigned int f(unsigned int a, unsigned int b) { return _mm_crc32_u32(a, b); }
+int f(__m128i a) { return _mm_extract_epi32(a, 1); }
 int main(void) { return 0; }
 EOF
-    if try ${CC} ${CFLAGS} ${sse42flag} $test.c; then
-        echo "Checking for SSE4.2 intrinsics ... Yes." | tee -a configure.log
-        HAVE_SSE42_INTRIN=1
+    if try ${CC} ${CFLAGS} ${sse41flag} $test.c; then
+        echo "Checking for SSE4.1 intrinsics ... Yes." | tee -a configure.log
+        HAVE_SSE41_INTRIN=1
     else
-        echo "Checking for SSE4.2 intrinsics ... No." | tee -a configure.log
-        HAVE_SSE42_INTRIN=0
+        echo "Checking for SSE4.1 intrinsics ... No." | tee -a configure.log
+        HAVE_SSE41_INTRIN=0
     fi
 }
 
@@ -1498,13 +1498,13 @@ case "${ARCH}" in
                 ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} adler32_ssse3.lo chunkset_ssse3.lo"
             fi
 
-            check_sse42_intrinsics
+            check_sse41_intrinsics
 
-            if test ${HAVE_SSE42_INTRIN} -eq 1; then
-                CFLAGS="${CFLAGS} -DX86_SSE42"
-                SFLAGS="${SFLAGS} -DX86_SSE42"
-                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} adler32_sse42.o"
-                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} adler32_sse42.lo"
+            if test ${HAVE_SSE41_INTRIN} -eq 1; then
+                CFLAGS="${CFLAGS} -DX86_SSE41"
+                SFLAGS="${SFLAGS} -DX86_SSE41"
+                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} adler32_sse41.o"
+                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} adler32_sse41.lo"
             fi
 
             check_pclmulqdq_intrinsics
@@ -1901,7 +1901,7 @@ echo sharedlibdir = $sharedlibdir >> configure.log
 echo uname = $uname >> configure.log
 echo sse2flag = $sse2flag >> configure.log
 echo ssse3flag = $ssse3flag >> configure.log
-echo sse42flag = $sse42flag >> configure.log
+echo sse41flag = $sse41flag >> configure.log
 echo pclmulflag = $pclmulflag >> configure.log
 echo vpclmulflag = $vpclmulflag >> configure.log
 echo xsaveflag = $xsaveflag >> configure.log
@@ -2041,7 +2041,7 @@ sed < $SRCDIR/$ARCHDIR/Makefile.in "
 /^AVX512VNNIFLAG *=/s#=.*#=$avx512vnniflag#
 /^SSE2FLAG *=/s#=.*#=$sse2flag#
 /^SSSE3FLAG *=/s#=.*#=$ssse3flag#
-/^SSE42FLAG *=/s#=.*#=$sse42flag#
+/^SSE41FLAG *=/s#=.*#=$sse41flag#
 /^PCLMULFLAG *=/s#=.*#=$pclmulflag#
 /^VPCLMULFLAG *=/s#=.*#=$vpclmulflag#
 /^XSAVEFLAG *=/s#=.*#=$xsaveflag#

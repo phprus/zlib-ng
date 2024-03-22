@@ -25,8 +25,8 @@ uint8_t* chunkmemset_safe_ssse3(uint8_t *out, unsigned dist, unsigned len, unsig
 void inflate_fast_ssse3(PREFIX3(stream) *strm, uint32_t start);
 #endif
 
-#ifdef X86_SSE42
-uint32_t adler32_fold_copy_sse42(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len);
+#ifdef X86_SSE41
+uint32_t adler32_fold_copy_sse41(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len);
 #endif
 
 #ifdef X86_AVX2
@@ -97,14 +97,14 @@ uint32_t crc32_vpclmulqdq(uint32_t crc32, const uint8_t *buf, size_t len);
 #    undef native_inflate_fast
 #    define native_inflate_fast inflate_fast_ssse3
 #  endif
-// X86 - SSE4.2
-#  if defined(X86_SSE42) && defined(__SSE4_2__)
+// X86 - SSE4.1
+#  if defined(X86_SSE41) && defined(__SSE4_1__)
 #    undef native_adler32_fold_copy
-#    define native_adler32_fold_copy adler32_fold_copy_sse42
+#    define native_adler32_fold_copy adler32_fold_copy_sse41
 #  endif
 
 // X86 - PCLMUL
-#if defined(X86_PCLMULQDQ_CRC) && defined(__PCLMUL__)
+#if defined(X86_PCLMULQDQ_CRC) && defined(__SSE4_1__) && defined(__PCLMUL__)
 #  undef native_crc32
 #  define native_crc32 crc32_pclmulqdq
 #  undef native_crc32_fold

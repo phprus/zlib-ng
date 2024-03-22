@@ -91,15 +91,15 @@ static void init_functable(void) {
         ft.inflate_fast = &inflate_fast_ssse3;
     }
 #endif
-    // X86 - SSE4.2
-#ifdef X86_SSE42
-    if (cf.x86.has_sse42) {
-        ft.adler32_fold_copy = &adler32_fold_copy_sse42;
+    // X86 - SSE4.1
+#ifdef X86_SSE41
+    if (cf.x86.has_sse41) {
+        ft.adler32_fold_copy = &adler32_fold_copy_sse41;
     }
 #endif
     // X86 - PCLMUL
 #ifdef X86_PCLMULQDQ_CRC
-    if (cf.x86.has_pclmulqdq) {
+    if (cf.x86.has_sse41 && cf.x86.has_pclmulqdq) {
         ft.crc32 = &crc32_pclmulqdq;
         ft.crc32_fold = &crc32_fold_pclmulqdq;
         ft.crc32_fold_copy = &crc32_fold_pclmulqdq_copy;

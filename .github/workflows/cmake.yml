@@ -115,22 +115,22 @@ jobs:
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_SSSE3=OFF -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SSSE3=OFF -DWITH_SSE41=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
             codecov: ubuntu_gcc_sse2
 
           - name: Ubuntu GCC SSSE3 UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SSE41=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
             codecov: ubuntu_gcc_ssse3
 
-          - name: Ubuntu GCC SSE4.2 UBSAN
+          - name: Ubuntu GCC SSE4.1 UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
             cmake-args: -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
-            codecov: ubuntu_gcc_sse42
+            codecov: ubuntu_gcc_sse41
 
           - name: Ubuntu GCC No PCLMULQDQ UBSAN
             os: ubuntu-latest

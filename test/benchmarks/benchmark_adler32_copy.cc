@@ -106,9 +106,9 @@ BENCHMARK_ADLER32_BASELINE_COPY(power8, adler32_power8, test_cpu_features.power.
 BENCHMARK_ADLER32_BASELINE_COPY(rvv, adler32_rvv, test_cpu_features.riscv.has_rvv);
 #endif
 
-#ifdef X86_SSE42
-BENCHMARK_ADLER32_BASELINE_COPY(sse42_baseline, adler32_ssse3, test_cpu_features.x86.has_ssse3);
-BENCHMARK_ADLER32_COPY(sse42, adler32_fold_copy_sse42, test_cpu_features.x86.has_sse42);
+#ifdef X86_SSE41
+BENCHMARK_ADLER32_BASELINE_COPY(sse41_baseline, adler32_ssse3, test_cpu_features.x86.has_ssse3);
+BENCHMARK_ADLER32_COPY(sse41, adler32_fold_copy_sse41, test_cpu_features.x86.has_sse41);
 #endif
 #ifdef X86_AVX2
 BENCHMARK_ADLER32_BASELINE_COPY(avx2_baseline, adler32_avx2, test_cpu_features.x86.has_avx2);
