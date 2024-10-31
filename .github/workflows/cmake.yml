@@ -48,6 +48,21 @@ jobs:
             cmake-args: -DWITH_NATIVE_INSTRUCTIONS=ON -DNATIVE_ARCH_OVERRIDE="-mavx -mpclmul"
             codecov: ubuntu_gcc_native_inst_avx
 
+          - name: Ubuntu GCC (Intel SDE)
+            os: ubuntu-latest
+            compiler: gcc
+            cxx-compiler: g++
+            sde-full-version: 9.44.0-2024-08-22
+            # pnr - Intel(R) Penryn CPU
+            # wsm - Intel(R) Westmere CPU
+            # snb - Intel(R) Sandy Bridge CPU
+            # hsw - Intel(R) Haswell CPU
+            # skx - Intel(R) Skylake server CPU
+            # clx - Intel(R) Cascade Lake CPU
+            # spr - Intel(R) Sapphire Rapids CPU
+#            sde: -pnr -wsm -snb -hsw -skx -clx -spr
+            sde: -hsw
+
           - name: Ubuntu GCC Symbol Prefix
             os: ubuntu-latest
             compiler: gcc
@@ -624,6 +639,14 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Download Intel(R) Software Development Emulator (Linux)
+      if: matrix.sde
+      run: |
+        curl -JLO "https://downloadmirror.intel.com/831748/sde-external-${{ matrix.sde-full-version }}-lin.tar.xz"
+        sudo tar xf sde-external-${{ matrix.sde-full-version }}-lin.tar.xz -C /opt
+        echo "/opt/sde-external-${{ matrix.sde-full-version }}-lin" >> $GITHUB_PATH
+        sudo sh -c "echo 0 > /proc/sys/kernel/yama/ptrace_scope"
+
     - name: Install packages (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -690,7 +713,18 @@ jobs:
     - name: Compile source code
       run: cmake --build ${{ matrix.build-dir || '.' }} -j2 --config ${{ matrix.build-config || 'Release' }}
 
-    - name: Run test cases
+    - name: Run test cases (Intel SDE)
+      if: matrix.sde
+      run: |
+        for arch in ${{ matrix.sde }}
+        do
+          echo "CPU arch: $arch"
+          echo sde $arch -- ctest --verbose -C Release --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
+          sde $arch -- ctest --verbose -C Release --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
+        done
+      working-directory: ${{ matrix.build-dir || '.' }}
+
+    - name: Run test cases (on host CPU)
       # Don't run tests on Windows ARM
       if: runner.os != 'Windows' || contains(matrix.name, 'ARM') == false
       run: ctest --verbose -C Release --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
