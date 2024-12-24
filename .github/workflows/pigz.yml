@@ -22,25 +22,25 @@ jobs:
             codecov: ubuntu_gcc_pigz
             cmake-args: -DZLIB_SYMBOL_PREFIX=zTest_
 
-          - name: Ubuntu Clang
-            os: ubuntu-latest
-            compiler: clang
+          - name: Ubuntu 22.04 Clang
+            os: ubuntu-22.04
+            compiler: clang-11
             packages: llvm-11 llvm-11-tools
             gcov-exec: llvm-cov-11 gcov
             codecov: ubuntu_clang_pigz
 
-          - name: Ubuntu Clang No Optim
-            os: ubuntu-latest
-            compiler: clang
+          - name: Ubuntu 22.04 Clang No Optim
+            os: ubuntu-22.04
+            compiler: clang-11
             packages: llvm-11 llvm-11-tools
             gcov-exec: llvm-cov-11 gcov
             codecov: ubuntu_clang_pigz_no_optim
             cmake-args: -DWITH_OPTIM=OFF
 
             # Use v2.6 due to NOTHREADS bug https://github.com/madler/pigz/issues/97
-          - name: Ubuntu Clang No Threads
-            os: ubuntu-latest
-            compiler: clang
+          - name: Ubuntu 22.04 Clang No Threads
+            os: ubuntu-22.04
+            compiler: clang-11
             packages: llvm-11 llvm-11-tools
             gcov-exec: llvm-cov-11 gcov
             codecov: ubuntu_clang_pigz_no_threads
