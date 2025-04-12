@@ -47,13 +47,6 @@ include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(FeatureSummary)
 
-include(cmake/detect-arch.cmake)
-include(cmake/detect-install-dirs.cmake)
-include(cmake/detect-coverage.cmake)
-include(cmake/detect-intrinsics.cmake)
-include(cmake/detect-sanitizer.cmake)
-include(cmake/fallback-macros.cmake)
-
 if(CMAKE_TOOLCHAIN_FILE)
     message(STATUS "Using CMake toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
@@ -73,7 +66,7 @@ if(NOT GENERATOR_IS_MULTI_CONFIG)
 endif()
 
 #
-# Options parsing
+# Common options
 #
 option(WITH_GZFILEOP "Compile with support for gzFile related functions" ON)
 option(ZLIB_COMPAT "Compile with zlib compatible API" OFF)
@@ -103,6 +96,24 @@ Default is no prefix (empty prefix).")
 set(WITH_SANITIZER AUTO CACHE STRING "Enable sanitizer support")
 set_property(CACHE WITH_SANITIZER PROPERTY STRINGS "Memory" "Address" "Undefined" "Thread")
 
+option(INSTALL_UTILS "Copy minigzip and minideflate during install" OFF)
+
+# Enable C++ for gtest_zlib, test/fuzz and benchmarks
+if(WITH_GTEST OR WITH_FUZZERS OR WITH_BENCHMARKS)
+    enable_language(CXX)
+endif()
+
+# Include zlib-ng cmake modules
+include(cmake/detect-arch.cmake)
+include(cmake/detect-install-dirs.cmake)
+include(cmake/detect-coverage.cmake)
+include(cmake/detect-intrinsics.cmake)
+include(cmake/detect-sanitizer.cmake)
+include(cmake/fallback-macros.cmake)
+
+#
+# Arch-specific options
+#
 if(BASEARCH_ARM_FOUND)
     option(WITH_ARMV8 "Build with ARMv8 CRC32 intrinsics" ON)
     option(WITH_NEON "Build with NEON intrinsics" ON)
@@ -132,8 +143,6 @@ elseif(BASEARCH_X86_FOUND)
     cmake_dependent_option(WITH_AVX512VNNI "Build with AVX512 VNNI extensions" ON "WITH_AVX512" OFF)
     cmake_dependent_option(WITH_VPCLMULQDQ "Build with VPCLMULQDQ" ON "WITH_PCLMULQDQ;WITH_AVX512" OFF)
 endif()
-
-option(INSTALL_UTILS "Copy minigzip and minideflate during install" OFF)
 
 mark_as_advanced(FORCE
     ZLIB_SYMBOL_PREFIX
