@@ -186,6 +186,8 @@ static int init_functable(void) {
 #  endif
     }
 #endif
+
+#if 0
     // X86 - AVX512 (F,DQ,BW,Vl)
 #ifdef X86_AVX512
     if (cf.x86.has_avx512_common) {
@@ -217,6 +219,7 @@ static int init_functable(void) {
     }
 #endif
 
+#endif
 
     // ARM - SIMD
 #ifdef ARM_SIMD
