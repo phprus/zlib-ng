@@ -8,12 +8,15 @@
 #include "zendian.h"
 #include "deflate.h"
 #include "crc32_braid_p.h"
+#include "inftrees.h"
 
 typedef uint32_t (*adler32_func)(uint32_t adler, const uint8_t *buf, size_t len);
 typedef uint32_t (*compare256_func)(const uint8_t *src0, const uint8_t *src1);
 typedef uint32_t (*crc32_func)(uint32_t crc, const uint8_t *buf, size_t len);
 typedef uint32_t (*crc32_copy_func)(uint32_t crc, uint8_t *dst, const uint8_t *src, size_t len);
 typedef void     (*slide_hash_func)(deflate_state *s);
+typedef int      (*inflate_table_func)(codetype type, uint16_t *lens, unsigned codes,
+                                       code * *table, unsigned *bits, uint16_t *work);
 
 
 uint32_t adler32_c(uint32_t adler, const uint8_t *buf, size_t len);
@@ -43,6 +46,9 @@ uint32_t longest_match_slow_c(deflate_state *const s, uint32_t cur_match);
 
 void     slide_hash_c(deflate_state *s);
 
+int      inflate_table_c(codetype type, uint16_t *lens, unsigned codes,
+                         code * *table, unsigned *bits, uint16_t *work);
+
 #ifdef DISABLE_RUNTIME_CPU_DETECTION
 // Generic code
 #  define native_adler32 adler32_c
@@ -60,6 +66,7 @@ void     slide_hash_c(deflate_state *s);
 #  define native_longest_match longest_match_c
 #  define native_longest_match_slow longest_match_slow_c
 #  define native_compare256 compare256_c
+#  define native_inflate_table inflate_table_c
 #endif
 
 #endif

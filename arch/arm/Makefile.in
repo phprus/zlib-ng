@@ -27,6 +27,7 @@ all: \
 	crc32_armv8_pmull_eor3.o crc32_armv8_pmull_eor3.lo \
 	slide_hash_neon.o slide_hash_neon.lo \
 	slide_hash_armv6.o slide_hash_armv6.lo \
+	inftrees_neon.o inftrees_neon.lo
 
 adler32_neon.o:
 	$(CC) $(CFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_neon.c
@@ -75,6 +76,12 @@ slide_hash_armv6.o:
 
 slide_hash_armv6.lo:
 	$(CC) $(SFLAGS) $(ARMV6FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_armv6.c
+
+inftrees_neon.o:
+	$(CC) $(CFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_neon.c
+
+inftrees_neon.lo:
+	$(CC) $(SFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_neon.c
 
 mostlyclean: clean
 clean:

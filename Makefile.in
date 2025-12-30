@@ -80,6 +80,7 @@ OBJZ = \
 	arch/generic/compare256_c.o \
 	arch/generic/crc32_braid_c.o \
 	arch/generic/slide_hash_c.o \
+	arch/generic/inftrees_c.o \
 	adler32.o \
 	compress.o \
 	crc32.o \
@@ -95,7 +96,7 @@ OBJZ = \
 	functable.o \
 	infback.o \
 	inflate.o \
-	inftrees.o \
+	inftrees_copyright.o \
 	insert_string.o \
 	trees.o \
 	uncompr.o \
@@ -118,6 +119,7 @@ PIC_OBJZ = \
 	arch/generic/compare256_c.lo \
 	arch/generic/crc32_braid_c.lo \
 	arch/generic/slide_hash_c.lo \
+	arch/generic/inftrees_c.lo \
 	adler32.lo \
 	compress.lo \
 	crc32.lo \
@@ -133,7 +135,7 @@ PIC_OBJZ = \
 	functable.lo \
 	infback.lo \
 	inflate.lo \
-	inftrees.lo \
+	inftrees_copyright.lo \
 	insert_string.lo \
 	trees.lo \
 	uncompr.lo \

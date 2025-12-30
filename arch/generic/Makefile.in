@@ -18,7 +18,8 @@ all: \
  compare256_c.o compare256_c.lo \
  crc32_braid_c.o crc32_braid_c.lo \
  crc32_chorba_c.o crc32_chorba_c.lo \
- slide_hash_c.o slide_hash_c.lo
+ slide_hash_c.o slide_hash_c.lo \
+ inftrees_c.o inftrees_c.lo
 
 
 adler32_c.o: $(SRCDIR)/adler32_c.c  $(SRCTOP)/zbuild.h $(SRCTOP)/adler32_p.h
@@ -57,6 +58,11 @@ slide_hash_c.o: $(SRCDIR)/slide_hash_c.c  $(SRCTOP)/zbuild.h $(SRCTOP)/deflate.h
 slide_hash_c.lo: $(SRCDIR)/slide_hash_c.c  $(SRCTOP)/zbuild.h $(SRCTOP)/deflate.h
 	$(CC) $(SFLAGS) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_c.c
 
+inftrees_c.o: $(SRCDIR)/inftrees_c.c  $(SRCTOP)/zbuild.h $(SRCTOP)/zutil.h $(SRCTOP)/inftrees.h $(SRCTOP)/fallback_builtins.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_c.c
+
+inftrees_c.lo: $(SRCDIR)/inftrees_c.c  $(SRCTOP)/zbuild.h $(SRCTOP)/zutil.h $(SRCTOP)/inftrees.h $(SRCTOP)/fallback_builtins.h
+	$(CC) $(SFLAGS) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_c.c
 
 mostlyclean: clean
 clean:

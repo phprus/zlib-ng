@@ -8,6 +8,7 @@
 
 #include "deflate.h"
 #include "crc32.h"
+#include "inftrees.h"
 
 #ifdef DISABLE_RUNTIME_CPU_DETECTION
 
@@ -35,6 +36,8 @@ struct functable_s {
     uint32_t (* longest_match)      (deflate_state *const s, uint32_t cur_match);
     uint32_t (* longest_match_slow) (deflate_state *const s, uint32_t cur_match);
     void     (* slide_hash)         (deflate_state *s);
+    int      (* inflate_table)      (codetype type, uint16_t *lens, unsigned codes,
+                                     code * *table, unsigned *bits, uint16_t *work);
 };
 
 Z_INTERNAL extern struct functable_s functable;

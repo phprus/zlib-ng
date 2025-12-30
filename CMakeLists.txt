@@ -879,7 +879,7 @@ if(WITH_OPTIM)
             if(NEON_AVAILABLE)
                 add_definitions(-DARM_NEON)
                 set(NEON_SRCS ${ARCHDIR}/adler32_neon.c ${ARCHDIR}/chunkset_neon.c
-                    ${ARCHDIR}/compare256_neon.c ${ARCHDIR}/slide_hash_neon.c)
+                    ${ARCHDIR}/compare256_neon.c ${ARCHDIR}/slide_hash_neon.c ${ARCHDIR}/inftrees_neon.c)
                 list(APPEND ZLIB_ARCH_SRCS ${NEON_SRCS})
                 set_property(SOURCE ${NEON_SRCS} PROPERTY COMPILE_FLAGS "${NEONFLAG} ${NOLTOFLAG}")
                 if(MSVC)
@@ -1145,7 +1145,7 @@ if(WITH_OPTIM)
             check_sse2_intrinsics()
             if(HAVE_SSE2_INTRIN)
                 add_definitions(-DX86_SSE2)
-                set(SSE2_SRCS ${ARCHDIR}/chunkset_sse2.c ${ARCHDIR}/chorba_sse2.c ${ARCHDIR}/compare256_sse2.c ${ARCHDIR}/slide_hash_sse2.c)
+                set(SSE2_SRCS ${ARCHDIR}/chunkset_sse2.c ${ARCHDIR}/chorba_sse2.c ${ARCHDIR}/compare256_sse2.c ${ARCHDIR}/slide_hash_sse2.c ${ARCHDIR}/inftrees_sse2.c)
                 list(APPEND ZLIB_ARCH_SRCS ${SSE2_SRCS})
                 if(ARCH_32BIT)
                     set_property(SOURCE ${SSE2_SRCS} PROPERTY COMPILE_FLAGS "${SSE2FLAG} ${NOLTOFLAG}")
@@ -1205,7 +1205,7 @@ if(WITH_OPTIM)
             check_avx2_intrinsics()
             if(HAVE_AVX2_INTRIN AND WITH_SSE42)
                 add_definitions(-DX86_AVX2)
-                set(AVX2_SRCS ${ARCHDIR}/slide_hash_avx2.c)
+                set(AVX2_SRCS ${ARCHDIR}/slide_hash_avx2.c ${ARCHDIR}/inftrees_avx2.c)
                 add_feature_info(AVX2_SLIDEHASH 1 "Support AVX2 optimized slide_hash, using \"${AVX2FLAG}\"")
                 list(APPEND AVX2_SRCS ${ARCHDIR}/chunkset_avx2.c)
                 add_feature_info(AVX2_CHUNKSET 1 "Support AVX2 optimized chunkset, using \"${AVX2FLAG}\"")
@@ -1387,7 +1387,7 @@ set(ZLIB_SRCS
     functable.c
     infback.c
     inflate.c
-    inftrees.c
+    inftrees_copyright.c
     insert_string.c
     trees.c
     uncompr.c
@@ -1400,6 +1400,7 @@ set(ZLIB_ALL_FALLBACK_SRCS
     arch/generic/compare256_c.c
     arch/generic/crc32_braid_c.c
     arch/generic/slide_hash_c.c
+    arch/generic/inftrees_c.c
 )
 
 if(WITH_ALL_FALLBACKS)
@@ -1410,6 +1411,7 @@ elseif(BASEARCH_X86_FOUND AND ARCH_64BIT AND WITH_SSE2)
     list(APPEND ZLIB_GENERIC_SRCS
         arch/generic/adler32_c.c
         arch/generic/crc32_braid_c.c
+        arch/generic/inftrees_c.c
     )
 
     # x86_64 does not need compare256 fallback if we have BUILTIN_CTZ

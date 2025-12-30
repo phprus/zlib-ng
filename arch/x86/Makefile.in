@@ -43,7 +43,9 @@ all: \
 	crc32_pclmulqdq.o crc32_pclmulqdq.lo \
 	crc32_vpclmulqdq.o crc32_vpclmulqdq.lo \
 	slide_hash_avx2.o slide_hash_avx2.lo \
-	slide_hash_sse2.o slide_hash_sse2.lo
+	slide_hash_sse2.o slide_hash_sse2.lo \
+	inftrees_avx2.o inftrees_avx2.lo \
+	inftrees_sse2.o inftrees_sse2.lo
 
 x86_features.o:
 	$(CC) $(CFLAGS) $(XSAVEFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/x86_features.c
@@ -158,6 +160,19 @@ adler32_sse42.o: $(SRCDIR)/adler32_sse42.c
 
 adler32_sse42.lo: $(SRCDIR)/adler32_sse42.c
 	$(CC) $(SFLAGS) $(SSE42FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_sse42.c
+
+inftrees_avx2.o:
+	$(CC) $(CFLAGS) $(AVX2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_avx2.c
+
+inftrees_avx2.lo:
+	$(CC) $(SFLAGS) $(AVX2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_avx2.c
+
+inftrees_sse2.o:
+	$(CC) $(CFLAGS) $(SSE2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_sse2.c
+
+inftrees_sse2.lo:
+	$(CC) $(SFLAGS) $(SSE2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/inftrees_sse2.c
+
 
 mostlyclean: clean
 clean:

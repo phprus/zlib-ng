@@ -1890,8 +1890,8 @@ case "${ARCH}" in
             if test ${HAVE_SSE2_INTRIN} -eq 1; then
                 CFLAGS="${CFLAGS} -DX86_SSE2"
                 SFLAGS="${SFLAGS} -DX86_SSE2"
-                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} chunkset_sse2.o chorba_sse2.o compare256_sse2.o slide_hash_sse2.o"
-                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} chunkset_sse2.lo chorba_sse2.lo compare256_sse2.lo slide_hash_sse2.lo"
+                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} chunkset_sse2.o chorba_sse2.o compare256_sse2.o slide_hash_sse2.o inftrees_sse2.o"
+                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} chunkset_sse2.lo chorba_sse2.lo compare256_sse2.lo slide_hash_sse2.lo inftrees_sse2.lo"
             fi
 
             check_ssse3_intrinsics
@@ -1935,8 +1935,8 @@ case "${ARCH}" in
             if test ${HAVE_AVX2_INTRIN} -eq 1; then
                 CFLAGS="${CFLAGS} -DX86_AVX2"
                 SFLAGS="${SFLAGS} -DX86_AVX2"
-                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} slide_hash_avx2.o chunkset_avx2.o compare256_avx2.o adler32_avx2.o"
-                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} slide_hash_avx2.lo chunkset_avx2.lo compare256_avx2.lo adler32_avx2.lo"
+                ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} slide_hash_avx2.o inftrees_avx2.o chunkset_avx2.o compare256_avx2.o adler32_avx2.o"
+                ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} slide_hash_avx2.lo inftrees_avx2.lo chunkset_avx2.lo compare256_avx2.lo adler32_avx2.lo"
             fi
 
             check_avx512_intrinsics
@@ -2165,8 +2165,8 @@ EOF
                         SFLAGS="${SFLAGS} -DARM_NEON_HASLD4"
                     fi
 
-                    ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} adler32_neon.o chunkset_neon.o compare256_neon.o slide_hash_neon.o"
-                    ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} adler32_neon.lo chunkset_neon.lo compare256_neon.lo slide_hash_neon.lo"
+                    ARCH_STATIC_OBJS="${ARCH_STATIC_OBJS} adler32_neon.o chunkset_neon.o compare256_neon.o slide_hash_neon.o inftrees_neon.o"
+                    ARCH_SHARED_OBJS="${ARCH_SHARED_OBJS} adler32_neon.lo chunkset_neon.lo compare256_neon.lo slide_hash_neon.lo inftrees_neon.lo"
                 fi
             fi
 

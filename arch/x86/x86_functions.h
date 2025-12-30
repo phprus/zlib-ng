@@ -29,6 +29,8 @@ uint8_t* chunkmemset_safe_sse2(uint8_t *out, uint8_t *from, unsigned len, unsign
     uint32_t crc32_copy_chorba_sse2(uint32_t crc, uint8_t *dst, const uint8_t *src, size_t len);
     uint32_t chorba_small_nondestructive_sse2(uint32_t c, const uint64_t *aligned_buf, size_t aligned_len);
 #  endif
+int  inflate_table_sse2(codetype type, uint16_t *lens, unsigned codes,
+                        code * *table, unsigned *bits, uint16_t *work);
 #endif
 
 #ifdef X86_SSSE3
@@ -59,6 +61,8 @@ uint8_t* chunkmemset_safe_avx2(uint8_t *out, uint8_t *from, unsigned len, unsign
 #  endif
     void slide_hash_avx2(deflate_state *s);
     void inflate_fast_avx2(PREFIX3(stream)* strm, uint32_t start);
+    int  inflate_table_avx2(codetype type, uint16_t *lens, unsigned codes,
+                            code * *table, unsigned *bits, uint16_t *work);
 #endif
 #ifdef X86_AVX512
 uint32_t adler32_avx512(uint32_t adler, const uint8_t *buf, size_t len);
@@ -106,6 +110,8 @@ uint32_t crc32_copy_vpclmulqdq(uint32_t crc, uint8_t *dst, const uint8_t *src, s
 #        define native_crc32 crc32_chorba_sse2
 #      endif
 #    endif
+#    undef native_inflate_table
+#    define native_inflate_table inflate_table_sse2
 #  endif
 // X86 - SSSE3
 #  if defined(X86_SSSE3) && defined(__SSSE3__)
@@ -157,6 +163,8 @@ uint32_t crc32_copy_vpclmulqdq(uint32_t crc, uint8_t *dst, const uint8_t *src, s
 #      undef native_longest_match_slow
 #      define native_longest_match_slow longest_match_slow_avx2
 #    endif
+#    undef native_inflate_table
+#    define native_inflate_table inflate_table_avx2
 #  endif
 // X86 - AVX512 (F,DQ,BW,Vl)
 #  if defined(X86_AVX512) && defined(__AVX512F__) && defined(__AVX512DQ__) && defined(__AVX512BW__) && defined(__AVX512VL__)

@@ -829,7 +829,7 @@ int32_t Z_EXPORT PREFIX(inflate)(PREFIX3(stream) *strm, int32_t flush) {
             state->next = state->codes;
             state->lencode = (const code *)(state->next);
             state->lenbits = 7;
-            ret = zng_inflate_table(CODES, state->lens, 19, &(state->next), &(state->lenbits), state->work);
+            ret = FUNCTABLE_CALL(inflate_table)(CODES, state->lens, 19, &(state->next), &(state->lenbits), state->work);
             if (ret) {
                 SET_BAD("invalid code lengths set");
                 break;
@@ -901,14 +901,14 @@ int32_t Z_EXPORT PREFIX(inflate)(PREFIX3(stream) *strm, int32_t flush) {
             state->next = state->codes;
             state->lencode = (const code *)(state->next);
             state->lenbits = 10;
-            ret = zng_inflate_table(LENS, state->lens, state->nlen, &(state->next), &(state->lenbits), state->work);
+            ret = FUNCTABLE_CALL(inflate_table)(LENS, state->lens, state->nlen, &(state->next), &(state->lenbits), state->work);
             if (ret) {
                 SET_BAD("invalid literal/lengths set");
                 break;
             }
             state->distcode = (const code *)(state->next);
             state->distbits = 9;
-            ret = zng_inflate_table(DISTS, state->lens + state->nlen, state->ndist,
+            ret = FUNCTABLE_CALL(inflate_table)(DISTS, state->lens + state->nlen, state->ndist,
                             &(state->next), &(state->distbits), state->work);
             if (ret) {
                 SET_BAD("invalid distances set");

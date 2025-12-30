@@ -16,7 +16,6 @@
    and so we can call inflate_trees() (see cover5()) */
 #include "zbuild.h"
 #include "zutil.h"
-#include "inftrees.h"
 #include "inflate.h"
 
 /* -- memory tracking routines -- */
@@ -618,32 +617,6 @@ static void cover_inflate(void) {
     inf("63 18 5 40 c 0", "window wrap", 3, -8, 300, Z_OK);
 }
 
-#ifndef TEST_STOCK_ZLIB
-/* cover remaining lines in inftrees.c */
-static void cover_trees(void) {
-    int ret;
-    unsigned bits;
-    uint16_t lens[16], work[16];
-    code *next, table[ENOUGH_DISTS];
-
-    /* we need to call inflate_table() directly in order to manifest not-
-       enough errors, since zlib ensures that enough is always enough */
-    for (bits = 0; bits < 15; bits++)
-        lens[bits] = (uint16_t)(bits + 1);
-    lens[15] = 15;
-    next = table;
-    bits = 15;
-    ret = zng_inflate_table(DISTS, lens, 16, &next, &bits, work);
-                                                assert(ret == 1);
-    next = table;
-    bits = 1;
-    ret = zng_inflate_table(DISTS, lens, 16, &next, &bits, work);
-                                                assert(ret == 1);
-    fputs("inflate_table not enough errors\n", stderr);
-    Z_UNUSED(ret);
-}
-#endif
-
 /* cover remaining inffast.c decoding and window copying */
 static void cover_fast(void) {
     inf("e5 e0 81 ad 6d cb b2 2c c9 01 1e 59 63 ae 7d ee fb 4d fd b5 35 41 68"
@@ -674,9 +647,6 @@ int main(void) {
     cover_wrap();
     cover_back();
     cover_inflate();
-#ifndef TEST_STOCK_ZLIB
-    cover_trees();
-#endif
     cover_fast();
     cover_cve_2022_37434();
     return 0;

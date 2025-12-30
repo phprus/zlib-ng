@@ -50,12 +50,9 @@ set(SWITCHLEVELS_COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:switchle
 add_executable(infcover infcover.c)
 configure_test_executable(infcover)
 target_link_libraries(infcover zlib-ng)
-if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
-    target_sources(infcover PRIVATE ${PROJECT_SOURCE_DIR}/inftrees.c)
-endif()
 add_test(NAME infcover COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:infcover>)
 
-add_executable(makefixed ${PROJECT_SOURCE_DIR}/tools/makefixed.c ${PROJECT_SOURCE_DIR}/inftrees.c)
+add_executable(makefixed ${PROJECT_SOURCE_DIR}/tools/makefixed.c ${PROJECT_SOURCE_DIR}/arch/generic/inftrees_c.c)
 configure_test_executable(makefixed)
 set(MAKEFIXED_COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:makefixed>)
 
@@ -182,6 +179,7 @@ if(WITH_GTEST)
                 test_crc32.cc               # crc32_armv8(), etc
                 test_crc32_copy.cc          # crc32_copy implementations
                 test_inflate_sync.cc        # expects a certain compressed block layout
+                test_inftrees.cc            # inflate_table_neon, etc
                 test_main.cc                # cpu_check_features()
                 test_version.cc             # expects a fixed version string
                 )

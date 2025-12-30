@@ -4,6 +4,9 @@
 #include "inftrees.h"
 #include "inflate.h"
 
+int inflate_table_c(codetype type, uint16_t *lens, unsigned codes,
+                    code * *table, unsigned *bits, uint16_t *work);
+
 // Build and return state with length and distance decoding tables and index sizes set to fixed code decoding.
 void Z_INTERNAL buildfixedtables(struct inflate_state *state) {
     static code *lenfix, *distfix;
@@ -22,14 +25,14 @@ void Z_INTERNAL buildfixedtables(struct inflate_state *state) {
     next = fixed;
     lenfix = next;
     bits = 9;
-    zng_inflate_table(LENS, state->lens, 288, &(next), &(bits), state->work);
+    inflate_table_c(LENS, state->lens, 288, &(next), &(bits), state->work);
 
     // distance table
     sym = 0;
     while (sym < 32) state->lens[sym++] = 5;
     distfix = next;
     bits = 5;
-    zng_inflate_table(DISTS, state->lens, 32, &(next), &(bits), state->work);
+    inflate_table_c(DISTS, state->lens, 32, &(next), &(bits), state->work);
 
     state->lencode = lenfix;
     state->lenbits = 9;

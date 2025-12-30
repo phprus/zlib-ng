@@ -12,6 +12,7 @@
 #define INFLATE_H_
 
 #include "crc32.h"
+#include "inftrees.h"
 
 #ifdef S390_DFLTCC_INFLATE
 #  include "arch/s390/dfltcc_common.h"

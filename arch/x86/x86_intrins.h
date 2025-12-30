@@ -1,6 +1,7 @@
 #ifndef X86_INTRINS_H
 #define X86_INTRINS_H
 
+#include <stdint.h>
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif

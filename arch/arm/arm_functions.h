@@ -17,6 +17,8 @@ uint32_t longest_match_slow_neon(deflate_state *const s, uint32_t cur_match);
 #  endif
 void slide_hash_neon(deflate_state *s);
 void inflate_fast_neon(PREFIX3(stream) *strm, uint32_t start);
+int  inflate_table_neon(codetype type, uint16_t *lens, unsigned codes,
+                        code * *table, unsigned *bits, uint16_t *work);
 #endif
 
 #ifdef ARM_CRC32
@@ -59,6 +61,8 @@ void slide_hash_armv6(deflate_state *s);
 #      undef native_longest_match_slow
 #      define native_longest_match_slow longest_match_slow_neon
 #    endif
+#    undef native_inflate_table
+#    define native_inflate_table inflate_table_neon
 #  endif
 // ARM - CRC32
 #  if (defined(ARM_CRC32) && defined(__ARM_FEATURE_CRC32))

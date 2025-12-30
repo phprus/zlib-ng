@@ -88,6 +88,7 @@ static int init_functable(void) {
     ft.longest_match_slow = &longest_match_slow_c;
     ft.compare256 = &compare256_c;
 #    endif
+    ft.inflate_table = &inflate_table_c;
 #  endif
 #else // WITH_ALL_FALLBACKS
     ft.adler32 = &adler32_c;
@@ -100,6 +101,7 @@ static int init_functable(void) {
     ft.longest_match = &longest_match_c;
     ft.longest_match_slow = &longest_match_slow_c;
     ft.compare256 = &compare256_c;
+    ft.inflate_table = &inflate_table_c;
 #endif
 
     // Select arch-optimized functions
@@ -129,6 +131,7 @@ static int init_functable(void) {
         ft.longest_match = &longest_match_sse2;
         ft.longest_match_slow = &longest_match_slow_sse2;
 #  endif
+        ft.inflate_table = &inflate_table_sse2;
     }
 #endif
     // X86 - SSSE3
@@ -179,6 +182,7 @@ static int init_functable(void) {
         ft.longest_match = &longest_match_avx2;
         ft.longest_match_slow = &longest_match_slow_avx2;
 #  endif
+        ft.inflate_table = &inflate_table_avx2;
     }
 #endif
     // X86 - AVX512 (F,DQ,BW,Vl)
@@ -235,6 +239,7 @@ static int init_functable(void) {
         ft.longest_match = &longest_match_neon;
         ft.longest_match_slow = &longest_match_slow_neon;
 #  endif
+        ft.inflate_table = &inflate_table_neon;
     }
 #endif
     // ARM - CRC32
@@ -366,6 +371,7 @@ static int init_functable(void) {
     FUNCTABLE_VERIFY_ASSIGN(ft, longest_match);
     FUNCTABLE_VERIFY_ASSIGN(ft, longest_match_slow);
     FUNCTABLE_VERIFY_ASSIGN(ft, slide_hash);
+    FUNCTABLE_VERIFY_ASSIGN(ft, inflate_table);
 
     // Memory barrier for weak memory order CPUs
     FUNCTABLE_BARRIER();
@@ -428,6 +434,12 @@ static void slide_hash_stub(deflate_state* s) {
     functable.slide_hash(s);
 }
 
+static int inflate_table_stub(codetype type, uint16_t *lens, unsigned codes,
+                              code * *table, unsigned *bits, uint16_t *work) {
+    FUNCTABLE_INIT_ABORT;
+    return functable.inflate_table(type, lens, codes, table, bits, work);
+}
+
 /* functable init */
 Z_INTERNAL struct functable_s functable = {
     force_init_stub,
@@ -441,6 +453,7 @@ Z_INTERNAL struct functable_s functable = {
     longest_match_stub,
     longest_match_slow_stub,
     slide_hash_stub,
+    inflate_table_stub,
 };
 
 #endif
