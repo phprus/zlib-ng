@@ -608,6 +608,24 @@ endif()
 set(CMAKE_REQUIRED_FLAGS)
 
 #
+# check for __builtin_clz() support in the compiler
+#
+set(CMAKE_REQUIRED_FLAGS ${ZNOLTOFLAG})
+check_c_source_compiles(
+    "int main(void) {
+        unsigned int zero = 0;
+        long test = __builtin_clz(zero);
+        (void)test;
+        return 0;
+    }"
+    HAVE_BUILTIN_CLZ
+)
+if(HAVE_BUILTIN_CLZ)
+    add_definitions(-DHAVE_BUILTIN_CLZ)
+endif()
+set(CMAKE_REQUIRED_FLAGS)
+
+#
 # check for __builtin_ctz() support in the compiler
 #
 set(CMAKE_REQUIRED_FLAGS ${ZNOLTOFLAG})

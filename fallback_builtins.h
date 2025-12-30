@@ -6,6 +6,18 @@
 
 #include <intrin.h>
 
+
+/* This is not a general purpose replacement for __builtin_clz. The function expects that value is != 0.
+ * Because of that assumption leading_zero is not initialized and the return value is not checked.
+ */
+Z_FORCEINLINE static int __builtin_clz(unsigned int value) {
+    Assert(value != 0, "Invalid input value: 0");
+    unsigned long leading_zero;
+    _BitScanReverse(&leading_zero, value);
+    return 31 - leading_zero;
+}
+#define HAVE_BUILTIN_CLZ
+
 /* This is not a general purpose replacement for __builtin_ctz. The function expects that value is != 0.
  * Because of that assumption trailing_zero is not initialized and the return value is not checked.
  * Tzcnt and bsf give identical results except when input value is 0, therefore this can not be allowed.
