@@ -97,14 +97,22 @@ int Z_INTERNAL INFLATE_TABLE(codetype type, uint16_t *lens, unsigned codes,
      */
 
     /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
+#ifdef FAST_COUNT_MIN_MAX
+    mask =
+#endif
     count_lengths(lens, codes, count);
 
     /* bound code lengths, force root to be within code lengths */
-    root = *bits;
+#ifdef FAST_COUNT_MIN_MAX
+    mask &= ~(uint32_t)3;
+    if (UNLIKELY(mask == 0))
+#else
     for (max = MAX_BITS; max >= 1; max--)
         if (count[max] != 0) break;
-    root = MIN(root, max);
-    if (UNLIKELY(max == 0)) {           /* no symbols to code at all */
+    if (UNLIKELY(max == 0))
+#endif
+    {
+        /* no symbols to code at all */
         here.op = (unsigned char)64;    /* invalid code marker */
         here.bits = (unsigned char)1;
         here.val = (uint16_t)0;
@@ -113,8 +121,15 @@ int Z_INTERNAL INFLATE_TABLE(codetype type, uint16_t *lens, unsigned codes,
         *bits = 1;
         return 0;     /* no symbols, but wait for decoding to report error */
     }
+#ifdef FAST_COUNT_MIN_MAX
+    min = (unsigned)__builtin_ctz(mask)/2;
+    max = MAX_BITS - (unsigned)__builtin_clz(mask)/2;
+#else
     for (min = 1; min < max; min++)
         if (count[min] != 0) break;
+#endif
+    root = *bits;
+    root = MIN(root, max);
     root = MAX(root, min);
 
     /* check for an over-subscribed or incomplete set of lengths */

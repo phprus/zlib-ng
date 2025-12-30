@@ -10,8 +10,22 @@
 #include "inftrees.h"
 #include "arch/generic/inftrees_one.h"
 
+
+/* vaddvq_u16 and vceqzq_u16 is only available on aarch64 */
+#if defined(HAVE_BUILTIN_CTZ) && defined(HAVE_BUILTIN_CLZ) && (          \
+        defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC) \
+    )
+#  define FAST_COUNT_MIN_MAX
+#endif
+
 /* Count number of codes for each code length. */
-static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
+static inline
+#ifdef FAST_COUNT_MIN_MAX
+unsigned
+#else
+void
+#endif
+count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     int sym;
 
     uint8x16_t s1 = vdupq_n_u8(0);
@@ -25,8 +39,21 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
       s2 = vaddq_u8(s2, vld1q_u8(&inftrees_one[16 * lens[sym+1]]));
     }
 
-    vst1q_u16(&count[0], vaddl_u8(vget_low_u8(s1), vget_low_u8(s2)));
-    vst1q_u16(&count[8], vaddl_u8(vget_high_u8(s1), vget_high_u8(s2)));
+    uint16x8_t sum_lo = vaddl_u8(vget_low_u8(s1), vget_low_u8(s2));
+    uint16x8_t sum_hi = vaddl_u8(vget_high_u8(s1), vget_high_u8(s2));
+
+    vst1q_u16(&count[0], sum_lo);
+    vst1q_u16(&count[8], sum_hi);
+
+#ifdef FAST_COUNT_MIN_MAX
+    static const ALIGNED_(16) uint16_t bitmask[8] = { 0x3, 0xC, 0x30, 0xC0, 0x300, 0xC00, 0x3000, 0xC000 };
+    uint16x8_t vbitmask = vld1q_u16(bitmask);
+    uint16x8_t mask_lo = vandq_u16(vceqzq_u16(sum_lo), vbitmask);
+    uint16x8_t mask_hi = vandq_u16(vceqzq_u16(sum_hi), vbitmask);
+    return ~(
+        ((unsigned)vaddvq_u16(mask_hi) << 16) | (unsigned)vaddvq_u16(mask_lo)
+    );
+#endif
 }
 
 

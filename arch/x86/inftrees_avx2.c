@@ -8,9 +8,22 @@
 #include "zutil.h"
 #include "inftrees.h"
 #include "arch/generic/inftrees_one.h"
+#include "fallback_builtins.h"
+#include <stdint.h>
+
+
+#if defined(HAVE_BUILTIN_CTZ) && defined(HAVE_BUILTIN_CLZ)
+#  define FAST_COUNT_MIN_MAX
+#endif
 
 /* Count number of codes for each code length. */
-static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
+static inline
+#ifdef FAST_COUNT_MIN_MAX
+unsigned
+#else
+void
+#endif
+count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     int sym;
 
     __m128i s1 = _mm_setzero_si128();
@@ -29,6 +42,11 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     __m256i sum = _mm256_add_epi16(w1, w2);
 
     _mm256_storeu_si256((__m256i*)&count[0], sum);
+
+#ifdef FAST_COUNT_MIN_MAX
+    __m256i mask = _mm256_cmpeq_epi16(sum, _mm256_setzero_si256());
+    return ~((unsigned)_mm256_movemask_epi8(mask));
+#endif
 }
 
 
