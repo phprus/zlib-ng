@@ -10,8 +10,15 @@
 
 #if defined(__SSE2__)
 #  include "arch/x86/x86_intrins.h"
+#  if defined(HAVE_BUILTIN_CTZ) && defined(HAVE_BUILTIN_CLZ)
+#    define FAST_COUNT_MIN_MAX
+#  endif
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
 #  include "arch/arm/neon_intrins.h"
+#  if defined(HAVE_BUILTIN_CTZ) && defined(HAVE_BUILTIN_CLZ) \
+        && (defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC))
+#    define FAST_COUNT_MIN_MAX
+#  endif
 #endif
 
 const char PREFIX(inflate_copyright)[] = " inflate 1.3.1 Copyright 1995-2024 Mark Adler ";
@@ -23,7 +30,13 @@ const char PREFIX(inflate_copyright)[] = " inflate 1.3.1 Copyright 1995-2024 Mar
  */
 
 /* Count number of codes for each code length. */
-static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
+static inline
+#ifdef FAST_COUNT_MIN_MAX
+unsigned
+#else
+void
+#endif
+count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     int sym;
     static const ALIGNED_(16) uint8_t one[256] = {
         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -56,9 +69,21 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
       s2 = vaddq_u8(s2, vld1q_u8(&one[16 * lens[sym+1]]));
     }
 
-    vst1q_u16(&count[0], vaddl_u8(vget_low_u8(s1), vget_low_u8(s2)));
-    vst1q_u16(&count[8], vaddl_u8(vget_high_u8(s1), vget_high_u8(s2)));
+    uint16x8_t sum_lo = vaddl_u8(vget_low_u8(s1), vget_low_u8(s2));
+    uint16x8_t sum_hi = vaddl_u8(vget_high_u8(s1), vget_high_u8(s2));
 
+    vst1q_u16(&count[0], sum_lo);
+    vst1q_u16(&count[8], sum_hi);
+
+#  ifdef FAST_COUNT_MIN_MAX
+    static const ALIGNED_(16) uint16_t bitmask[8] = { 0x3, 0xC, 0x30, 0xC0, 0x300, 0xC00, 0x3000, 0xC000 };
+    uint16x8_t vbitmask = vld1q_u16(bitmask);
+    uint16x8_t mask_lo = vandq_u16(vceqzq_u16(sum_lo), vbitmask);
+    uint16x8_t mask_hi = vandq_u16(vceqzq_u16(sum_hi), vbitmask);
+    return ~(
+        ((unsigned)vaddvq_u16(mask_hi) << 16) | (unsigned)vaddvq_u16(mask_lo)
+    );
+#  endif
 #elif defined(__SSE2__)
     __m128i s1 = _mm_setzero_si128();
     __m128i s2 = _mm_setzero_si128();
@@ -67,7 +92,7 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
         s1 = _mm_load_si128((const __m128i*)&one[16 * lens[0]]);
     }
     for (sym = codes & 1; sym < codes; sym += 2) {
-        s1 = _mm_add_epi8(s1, _mm_load_si128((const __m128i*)&one[16 * lens[sym]]));  // vaddq_u8
+        s1 = _mm_add_epi8(s1, _mm_load_si128((const __m128i*)&one[16 * lens[sym]]));
         s2 = _mm_add_epi8(s2, _mm_load_si128((const __m128i*)&one[16 * lens[sym+1]]));
     }
 
@@ -77,6 +102,11 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     __m256i sum = _mm256_add_epi16(w1, w2);
 
     _mm256_storeu_si256((__m256i*)&count[0], sum);
+
+#    ifdef FAST_COUNT_MIN_MAX
+    __m256i mask = _mm256_cmpeq_epi16(sum, _mm256_setzero_si256());
+    return ~((unsigned)_mm256_movemask_epi8(mask));
+#    endif
 #  else
     __m128i zero = _mm_setzero_si128();
 
@@ -89,6 +119,14 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     __m128i s2_hi = _mm_unpackhi_epi8(s2, zero);
     __m128i sum_hi = _mm_add_epi16(s1_hi, s2_hi);
     _mm_storeu_si128((__m128i*)&count[8], sum_hi);
+
+#    ifdef FAST_COUNT_MIN_MAX
+    __m128i mask_lo = _mm_cmpeq_epi16(sum_lo, _mm_setzero_si128());
+    __m128i mask_hi = _mm_cmpeq_epi16(sum_hi, _mm_setzero_si128());
+    return ~(
+        ((unsigned)_mm_movemask_epi8(mask_hi) << 16) | (unsigned)_mm_movemask_epi8(mask_lo)
+    );
+#    endif
 #  endif
 #else
     int len;
@@ -182,14 +220,22 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
      */
 
     /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
+#ifdef FAST_COUNT_MIN_MAX
+    mask =
+#endif
     count_lengths(lens, codes, count);
 
     /* bound code lengths, force root to be within code lengths */
-    root = *bits;
+#ifdef FAST_COUNT_MIN_MAX
+    mask &= ~(unsigned)3;
+    if (UNLIKELY(mask == 0))
+#else
     for (max = MAX_BITS; max >= 1; max--)
         if (count[max] != 0) break;
-    root = MIN(root, max);
-    if (UNLIKELY(max == 0)) {           /* no symbols to code at all */
+    if (UNLIKELY(max == 0))
+#endif
+    {
+        /* no symbols to code at all */
         here.op = (unsigned char)64;    /* invalid code marker */
         here.bits = (unsigned char)1;
         here.val = (uint16_t)0;
@@ -198,8 +244,15 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
         *bits = 1;
         return 0;     /* no symbols, but wait for decoding to report error */
     }
+#ifdef FAST_COUNT_MIN_MAX
+    min = (unsigned)__builtin_ctz(mask)/2;
+    max = MAX_BITS - (unsigned)__builtin_clz(mask)/2;
+#else
     for (min = 1; min < max; min++)
         if (count[min] != 0) break;
+#endif
+    root = *bits;
+    root = MIN(root, max);
     root = MAX(root, min);
 
     /* check for an over-subscribed or incomplete set of lengths */
