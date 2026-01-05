@@ -100,6 +100,60 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
 #endif
 }
 
+
+/* generate offsets into symbol table for each length for sorting */
+static inline void generate_offsets(uint16_t *count, uint16_t *offs) {
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+    uint16x8_t lo = vld1q_u16(&count[0]);
+    lo = vextq_u16(lo, vdupq_n_u16(0), 1);
+    lo = vaddq_u16(lo, vextq_u16(vdupq_n_u16(0), lo, 7));
+    lo = vaddq_u16(lo, vextq_u16(vdupq_n_u16(0), lo, 6));
+    lo = vaddq_u16(lo, vextq_u16(vdupq_n_u16(0), lo, 4));
+
+    uint16x8_t hi = vld1q_u16(&count[8]);
+    hi = vextq_u16(vdupq_n_u16(0), hi, 7);
+    hi = vaddq_u16(hi, vextq_u16(vdupq_n_u16(0), hi, 7));
+    hi = vaddq_u16(hi, vextq_u16(vdupq_n_u16(0), hi, 6));
+    hi = vaddq_u16(hi, vextq_u16(vdupq_n_u16(0), hi, 4));
+
+    uint16x8_t offset;
+    offset = vreinterpretq_u16_s32(vsetq_lane_s32(vgetq_lane_s32(vreinterpretq_s32_u16(lo), 3), vreinterpretq_s32_u16(lo), 2));
+    offset = vreinterpretq_u16_s64(vsetq_lane_s64(vgetq_lane_s64(vreinterpretq_s64_u16(offset), 1), vreinterpretq_s64_u16(offset), 0));
+
+    hi = vaddq_u16(hi, offset);
+    lo = vextq_u16(vdupq_n_u16(0), lo, 8-2);
+
+    vst1q_u16(&offs[0], lo);
+    vst1q_u16(&offs[8], hi);
+#elif defined(__SSE2__)
+    __m128i lo = _mm_loadu_si128((const __m128i*)&count[0]);
+    lo = _mm_srli_si128(lo, 2);
+    lo = _mm_add_epi16(lo, _mm_slli_si128(lo, 2));
+    lo = _mm_add_epi16(lo, _mm_slli_si128(lo, 4));
+    lo = _mm_add_epi16(lo, _mm_slli_si128(lo, 8));
+
+    __m128i hi = _mm_loadu_si128((const __m128i*)&count[8]);
+    hi = _mm_slli_si128(hi, 2);
+    hi = _mm_add_epi16(hi, _mm_slli_si128(hi, 2));
+    hi = _mm_add_epi16(hi, _mm_slli_si128(hi, 4));
+    hi = _mm_add_epi16(hi, _mm_slli_si128(hi, 8));
+
+    __m128i offset = _mm_shuffle_epi32(lo, _MM_SHUFFLE(3, 3, 3, 3));
+
+    hi = _mm_add_epi16(hi, offset);
+    lo = _mm_slli_si128(lo, 4);
+
+    _mm_storeu_si128((__m128i*)&offs[0], lo);
+    _mm_storeu_si128((__m128i*)&offs[8], hi);
+#else
+    int len;
+    offs[1] = 0;
+    for (len = 1; len < MAX_BITS; len++)
+        offs[len + 1] = offs[len] + count[len];
+#endif
+}
+
+
 /*
    Build a set of tables to decode the provided canonical Huffman code.
    The code lengths are lens[0..codes-1].  The result starts at *table,
@@ -213,9 +267,7 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
         return -1;                      /* incomplete set */
 
     /* generate offsets into symbol table for each length for sorting */
-    offs[1] = 0;
-    for (len = 1; len < MAX_BITS; len++)
-        offs[len + 1] = offs[len] + count[len];
+    generate_offsets(count, offs);
 
     /* sort symbols by length, by symbol order within each length */
     for (sym = 0; sym < codes; sym++)
