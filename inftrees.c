@@ -8,7 +8,7 @@
 #include "inftrees.h"
 #include "fallback_builtins.h"
 
-#if defined(__SSE2__)
+#if defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #  include "arch/x86/x86_intrins.h"
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
 #  include "arch/arm/neon_intrins.h"
@@ -59,7 +59,7 @@ static inline void count_lengths(uint16_t *lens, int codes, uint16_t *count) {
     vst1q_u16(&count[0], vaddl_u8(vget_low_u8(s1), vget_low_u8(s2)));
     vst1q_u16(&count[8], vaddl_u8(vget_high_u8(s1), vget_high_u8(s2)));
 
-#elif defined(__SSE2__)
+#elif defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
     __m128i s1 = _mm_setzero_si128();
     __m128i s2 = _mm_setzero_si128();
 
