@@ -182,6 +182,14 @@
 #    define ARCH_NAME "wasm32"
 #  endif
 
+/* Elbrus 2000 (aka e2k) */
+#elif defined(__e2k__)
+#  define ARCH_E2K
+/* e2k reuse x86 optimizations */
+#  define ARCH_X86
+#  define ARCH_64BIT
+#  define ARCH_NAME "e2k"
+
 /* Unrecognized architecture */
 #else
 #  if defined(__LP64__) || defined(_LP64) || defined(_WIN64)
