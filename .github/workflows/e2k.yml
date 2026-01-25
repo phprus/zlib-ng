@@ -1,0 +1,115 @@
+name: e2k
+on: [push, pull_request]
+env:
+  TERM: xterm-256color
+  GTEST_COLOR: 1
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cmake:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu LCC e2kv4
+            os: ubuntu-latest
+            cmake-args: -DWITH_BENCHMARKS=ON
+            toolchain: 1.29.12.e2k-v4.8c.linux-6.1
+            march: elbrus-v4
+
+          - name: Ubuntu LCC e2kv5
+            os: ubuntu-latest
+            cmake-args: -DWITH_BENCHMARKS=ON
+            toolchain: 1.29.12.e2k-v5.8c2.linux-6.1
+            march: elbrus-v5
+
+          - name: Ubuntu LCC e2kv6
+            os: ubuntu-latest
+            cmake-args: -DWITH_BENCHMARKS=ON
+            toolchain: 1.29.12.e2k-v6.2c3.linux-6.1
+            march: elbrus-v6
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+      with:
+        show-progress: false
+
+    - name: Checkout test corpora
+      uses: actions/checkout@v6
+      # Don't test the extra corpora with Sanitizer builds, due to their slow testing.
+      if: ${{ !contains(matrix.cmake-args, 'WITH_SANITIZER') }}
+      with:
+        repository: zlib-ng/corpora
+        path: test/data/corpora
+        show-progress: false
+
+    - name: Add ubuntu mirrors
+      # Github Actions caching proxy is at times unreliable
+      run: |
+        echo -e 'http://azure.archive.ubuntu.com/ubuntu\tpriority:1\n' | sudo tee /etc/apt/mirrors.txt
+        curl http://mirrors.ubuntu.com/mirrors.txt | sudo tee --append /etc/apt/mirrors.txt
+        sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu/#mirror+file:/etc/apt/mirrors.txt#' /etc/apt/sources.list
+
+    - name: Install packages (Ubuntu)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --allow-downgrades --no-install-recommends \
+            ${{ matrix.packages }} make
+
+    - name: Install MCST LCC (Ubuntu)
+      run: |
+        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
+        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
+
+    - name: Install MCST QEMU (Ubuntu)
+      run: |
+        sudo curl -o /usr/bin/qemu-e2k-static https://dev.mcst.ru/downloads/2025-12-26/qemu-e2k-static
+        sudo chmod +x /usr/bin/qemu-e2k-static
+
+    - name: Generate project files
+      shell: bash
+      # Shared libraries turned off
+      run: |
+        cmake -S . ${{ matrix.cmake-args }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build-config || 'Release' }} \
+          -DBUILD_SHARED_LIBS=${{ matrix.build-shared || 'OFF' }} \
+          -DWITH_FUZZERS=ON \
+          -DWITH_MAINTAINER_WARNINGS=ON \
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-${{ matrix.toolchain }} -DQEMU_CPU=${{ matrix.march }} \
+          -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF -DCMAKE_DISABLE_FIND_PACKAGE_GTest=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_benchmark=TRUE
+      env:
+        CC: ${{ matrix.compiler }}
+        CXX: ${{ matrix.cxx-compiler }}
+        CFLAGS: ${{ matrix.cflags }} -march=${{ matrix.march }}
+        CXXFLAGS: ${{ matrix.cxxflags }} -march=${{ matrix.march }} -DBENCHMARK_HAS_NO_INLINE_ASSEMBLY
+        LDFLAGS: ${{ matrix.ldflags }} -static
+        CI: true
+
+    - name: Compile source code
+      run: cmake --build . --verbose -j2 --config ${{ matrix.build-config || 'Release' }}
+
+    - name: Run test cases
+      if: ${{ !contains(matrix.name, 'e2kv6') }}
+      run: ctest --verbose -C Release -E benchmark_zlib --output-on-failure --max-width 120 -j 1
+
+    - name: Test benchmarks (crashtest only)
+      if: ${{ !contains(matrix.name, 'e2kv6') && contains(matrix.cmake-args, '-DWITH_BENCHMARKS=ON') }}
+      run: ctest --verbose -C Release -R ^benchmark_zlib$ --output-on-failure --max-width 120 -j 1
+
+    - name: Upload build errors
+      uses: actions/upload-artifact@v6
+      if: failure()
+      with:
+        name: ${{ matrix.name }} (cmake)
+        path: |
+          **/CMakeFiles/CMakeOutput.log
+          **/CMakeFiles/CMakeError.log
+          **/Testing/Temporary/*
+          coverage.xml
+        retention-days: 30
