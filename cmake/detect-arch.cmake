@@ -143,6 +143,30 @@ elseif("${ARCH}" MATCHES "wasm(32|64)")
     else()
         set(ARCH_BITS 32)
     endif()
+elseif("${ARCH}" MATCHES "e2k")
+    set(BASEARCH "e2k")
+    set(BASEARCH_E2K_FOUND TRUE)
+    set(ARCH_BITS 64)
+
+    # Compile detect-e2k-isa.c and read the architecture version from the binary
+    try_compile(
+        COMPILE_RESULT
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/detect-e2k-isa.c
+        COPY_FILE ${CMAKE_CURRENT_BINARY_DIR}/detect-e2k-isa.bin
+    )
+    if(COMPILE_RESULT)
+        file(STRINGS ${CMAKE_CURRENT_BINARY_DIR}/detect-e2k-isa.bin
+            RAWOUTPUT REGEX "archversion [0-9]+")
+    endif()
+
+    # Find archversion tag, and extract the archversion word into ARCHVERSION variable
+    string(REGEX REPLACE ".*archversion ([0-9]+).*" "\\1" ARCHVERSION "${RAWOUTPUT}")
+    if(NOT ARCHVERSION)
+        set(ARCHVERSION 0)
+    endif()
+
+    message(STATUS "Arch version ${BASEARCH}v${ARCHVERSION}.")
 else()
     set(BASEARCH "x86")
     set(BASEARCH_X86_FOUND TRUE)
