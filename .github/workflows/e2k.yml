@@ -18,27 +18,22 @@ jobs:
         include:
           - name: Ubuntu LCC e2kv4
             os: ubuntu-latest
-            cmake-args: -DWITH_BENCHMARKS=ON -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v4.8c.linux-6.1 -DQEMU_CPU=elbrus-v4
+            cmake-args: -DWITH_BENCHMARKS=ON
             # -DWITH_PCLMULQDQ=OFF -DWITH_AVX2=OFF -DWITH_NATIVE_INSTRUCTIONS=ON -DNATIVE_ARCH_OVERRIDE="-march=elbrus-v4 -mno-avx -mno-pclmul"
-            cflags: -march=elbrus-v4
-            cxxflags: -march=elbrus-v4
-            ldflags: -static
+            toolchain: 1.29.12.e2k-v4.8c.linux-6.1
+            march: elbrus-v4
 
           - name: Ubuntu LCC e2kv5
             os: ubuntu-latest
-            cmake-args: -DWITH_BENCHMARKS=ON -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v5.8c2.linux-6.1 -DQEMU_CPU=elbrus-v5
-            # -DWITH_PCLMULQDQ=OFF -DWITH_AVX2=OFF -DWITH_NATIVE_INSTRUCTIONS=ON -DNATIVE_ARCH_OVERRIDE="-march=elbrus-v5 -mno-avx -mno-pclmul"
-            cflags: -march=elbrus-v5
-            cxxflags: -march=elbrus-v5
-            ldflags: -static
+            cmake-args: -DWITH_BENCHMARKS=ON
+            toolchain: 1.29.12.e2k-v5.8c2.linux-6.1
+            march: elbrus-v5
 
           - name: Ubuntu LCC e2kv6
             os: ubuntu-latest
-            cmake-args: -DWITH_BENCHMARKS=ON -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v6.2c3.linux-6.1 -DQEMU_CPU=elbrus-v6
-            # -DWITH_AVX2=OFF -DWITH_NATIVE_INSTRUCTIONS=ON -DNATIVE_ARCH_OVERRIDE="-march=elbrus-v6 -mno-avx"
-            cflags: -march=elbrus-v6
-            cxxflags: -march=elbrus-v6
-            ldflags: -static
+            cmake-args: -DWITH_BENCHMARKS=ON
+            toolchain: 1.29.12.e2k-v6.2c3.linux-6.1
+            march: elbrus-v6
 
     steps:
     - name: Checkout repository
@@ -68,23 +63,10 @@ jobs:
         sudo apt-get install -y --allow-downgrades --no-install-recommends \
             ${{ matrix.packages }} make
 
-    - name: Install MCST LCC for e2kv4 (Ubuntu)
-      if: contains(matrix.name, 'e2kv4')
+    - name: Install MCST LCC (Ubuntu)
       run: |
-        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-1.29.12.e2k-v4.8c.linux-6.1_64.tgz
-        sudo tar -xzf cross-sp-1.29.12.e2k-v4.8c.linux-6.1_64.tgz -C /
-
-    - name: Install MCST LCC for e2kv5 (Ubuntu)
-      if: contains(matrix.name, 'e2kv5')
-      run: |
-        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-1.29.12.e2k-v5.8c2.linux-6.1_64.tgz
-        sudo tar -xzf cross-sp-1.29.12.e2k-v5.8c2.linux-6.1_64.tgz -C /
-
-    - name: Install MCST LCC for e2kv6 (Ubuntu)
-      if: contains(matrix.name, 'e2kv6')
-      run: |
-        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-1.29.12.e2k-v6.2c3.linux-6.1_64.tgz
-        sudo tar -xzf cross-sp-1.29.12.e2k-v6.2c3.linux-6.1_64.tgz -C /
+        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
+        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
 
     - name: Install MCST QEMU (Ubuntu)
       run: |
@@ -100,13 +82,14 @@ jobs:
           -DBUILD_SHARED_LIBS=${{ matrix.build-shared || 'OFF' }} \
           -DWITH_FUZZERS=ON \
           -DWITH_MAINTAINER_WARNINGS=ON \
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-${{ matrix.toolchain }} -DQEMU_CPU=${{ matrix.march }} \
           -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF -DCMAKE_DISABLE_FIND_PACKAGE_GTest=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_benchmark=TRUE
       env:
         CC: ${{ matrix.compiler }}
         CXX: ${{ matrix.cxx-compiler }}
-        CFLAGS: ${{ matrix.cflags }}
-        CXXFLAGS: ${{ matrix.cxxflags }} -DBENCHMARK_HAS_NO_INLINE_ASSEMBLY
-        LDFLAGS: ${{ matrix.ldflags }}
+        CFLAGS: ${{ matrix.cflags }} -march=${{ matrix.march }}
+        CXXFLAGS: ${{ matrix.cxxflags }} -march=${{ matrix.march }} -DBENCHMARK_HAS_NO_INLINE_ASSEMBLY
+        LDFLAGS: ${{ matrix.ldflags }} -static
         CI: true
 
     - name: Compile source code
