@@ -57,23 +57,23 @@ jobs:
         sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu/#mirror+file:/etc/apt/mirrors.txt#' /etc/apt/sources.list
 
     - name: Install packages (Ubuntu)
+      if: matrix.packages
       run: |
         sudo apt-get update
         sudo apt-get install -y --allow-downgrades --no-install-recommends \
-            ${{ matrix.packages }} make
+            ${{ matrix.packages }}
 
     # Get MCST LCC from github actions cache or download from mcst.dev and save to cache
     - name: Cache MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+      if: ${{ contains(matrix.name, 'e2k') }}
       id: cache-lcc
       uses: actions/cache@v5
-      env:
-        cache-name: cache-lcc
       with:
         path: /opt/mcst
-        key: ${{ env.cache-name }}-${{ matrix.toolchain }}
+        key: cache-lcc-${{ matrix.toolchain }}
 
-    - if: ${{ steps.cache-lcc.outputs.cache-hit != 'true' }}
-      name: Install MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+    - name: Install MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+      if: ${{ contains(matrix.name, 'e2k') && steps.cache-lcc.outputs.cache-hit != 'true' }}
       continue-on-error: false
       shell: bash
       run: |
@@ -84,16 +84,15 @@ jobs:
 
     # Get qemu-e2k-static from github actions cache or download from mcst.dev and save to cache
     - name: Cache MCST QEMU (Ubuntu)
+      if: ${{ contains(matrix.name, 'e2k') }}
       id: cache-qemu-e2k-static
       uses: actions/cache@v5
-      env:
-        cache-name: cache-qemu-e2k-static
       with:
         path: /usr/local/bin/qemu-e2k-static
-        key: ${{ env.cache-name }}-20251226
+        key: cache-qemu-e2k-static-20251226
 
-    - if: ${{ steps.cache-qemu-e2k-static.outputs.cache-hit != 'true' }}
-      name: Install MCST QEMU (Ubuntu)
+    - name: Install MCST QEMU (Ubuntu)
+      if: ${{ contains(matrix.name, 'e2k') && steps.cache-qemu-e2k-static.outputs.cache-hit != 'true' }}
       continue-on-error: false
       shell: bash
       run: |
