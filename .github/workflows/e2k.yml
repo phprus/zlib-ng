@@ -81,10 +81,6 @@ jobs:
         sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
         rm -f cross-sp-${{ matrix.toolchain }}_64.tgz
 
-#    - name: Install MCST LCC ${{ matrix.toolchain }} (Ubuntu)
-#      run: |
-#        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
-#        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
 
     # Get qemu-e2k-static from github actions cache or download from mcst.dev and save to cache
     - name: Cache MCST QEMU (Ubuntu)
@@ -105,10 +101,6 @@ jobs:
         chmod +x qemu-e2k-static
         sudo mv qemu-e2k-static /usr/local/bin
 
-#    - name: Install MCST QEMU (Ubuntu)
-#      run: |
-#        sudo curl -o /usr/bin/qemu-e2k-static https://dev.mcst.ru/downloads/2025-12-26/qemu-e2k-static
-#        sudo chmod +x /usr/bin/qemu-e2k-static
 
     - name: Generate project files
       shell: bash
