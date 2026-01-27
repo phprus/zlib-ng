@@ -62,21 +62,39 @@ jobs:
         sudo apt-get install -y --allow-downgrades --no-install-recommends \
             ${{ matrix.packages }} make
 
-    - name: Install MCST LCC (Ubuntu)
-      run: |
-        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
-        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
+    # Get MCST LCC from github actions cache or download from mcst.dev and save to cache
+    - name: Cache MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+      id: cache-lcc
+      uses: actions/cache@v5
+      env:
+        cache-name: cache-lcc
+      with:
+        path: /opt/mcst
+        key: ${{ env.cache-name }}-${{ matrix.toolchain }}
 
+    - if: ${{ steps.cache-lcc.outputs.cache-hit != 'true' }}
+      name: Install MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+      continue-on-error: false
+      shell: bash
+      run: |
+        wget -q https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
+        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
+        rm -f cross-sp-${{ matrix.toolchain }}_64.tgz
+
+#    - name: Install MCST LCC ${{ matrix.toolchain }} (Ubuntu)
+#      run: |
+#        sudo curl -O https://dev.mcst.ru/downloads/2025-06-27/cross-sp-${{ matrix.toolchain }}_64.tgz
+#        sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
 
     # Get qemu-e2k-static from github actions cache or download from mcst.dev and save to cache
     - name: Cache MCST QEMU (Ubuntu)
       id: cache-qemu-e2k-static
       uses: actions/cache@v5
       env:
-        cache-name: cache-qemu-e2k-static-20251226
+        cache-name: cache-qemu-e2k-static
       with:
         path: /usr/local/bin/qemu-e2k-static
-        key: ${{ env.cache-name }}
+        key: ${{ env.cache-name }}-20251226
 
     - if: ${{ steps.cache-qemu-e2k-static.outputs.cache-hit != 'true' }}
       name: Install MCST QEMU (Ubuntu)
