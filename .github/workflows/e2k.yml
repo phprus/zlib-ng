@@ -90,14 +90,15 @@ jobs:
       uses: actions/cache@v5
       with:
         path: /usr/local/bin/qemu-e2k-static
-        key: cache-qemu-e2k-static-20251226
+        key: cache-qemu-e2k-static-20260130
 
     - name: Install MCST QEMU (Ubuntu)
       if: ${{ contains(matrix.name, 'e2k') && steps.cache-qemu-e2k-static.outputs.cache-hit != 'true' }}
       continue-on-error: false
       shell: bash
       run: |
-        wget -q https://dev.mcst.ru/downloads/2025-12-26/qemu-e2k-static
+        # wget -q https://dev.mcst.ru/downloads/2025-12-26/qemu-e2k-static
+        wget -q https://packages.shchapov.ru/beta/qemu-e2k-static
         chmod +x qemu-e2k-static
         sudo mv qemu-e2k-static /usr/local/bin
 
@@ -125,11 +126,10 @@ jobs:
       run: cmake --build . --verbose -j2 --config ${{ matrix.build-config || 'Release' }}
 
     - name: Run test cases
-      if: ${{ !contains(matrix.name, 'e2kv6') }}
       run: ctest --verbose -C Release -E benchmark_zlib --output-on-failure --max-width 120 -j 1
 
     - name: Test benchmarks (crashtest only)
-      if: ${{ !contains(matrix.name, 'e2kv6') && contains(matrix.cmake-args, '-DWITH_BENCHMARKS=ON') }}
+      if: ${{ contains(matrix.cmake-args, '-DWITH_BENCHMARKS=ON') }}
       run: ctest --verbose -C Release -R ^benchmark_zlib$ --output-on-failure --max-width 120 -j 1
 
     - name: Upload build errors
