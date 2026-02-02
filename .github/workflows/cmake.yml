@@ -685,7 +685,7 @@ jobs:
 
           - name: Ubuntu LCC e2kv6
             os: ubuntu-latest
-            cmake-args: -DWITH_BENCHMARKS=OFF -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v6.2c3.linux-6.1 -DQEMU_CPU=elbrus-v6 -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF
+            cmake-args: -DWITH_BENCHMARKS=OFF -DBUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v6.2c3.linux-6.1 -DQEMU_CPU=elbrus-v6 -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF
             toolchain: 1.29.12.e2k-v6.2c3.linux-6.1
             cflags: -march=elbrus-v6
             cxxflags: -march=elbrus-v6 -DBENCHMARK_HAS_NO_INLINE_ASSEMBLY
@@ -868,8 +868,8 @@ jobs:
       run: cmake --build . --verbose -j2 --config ${{ matrix.build-config || 'Release' }}
 
     - name: Run test cases
-      # Don't run tests on Windows ARM and on e2kv6 (qemu: unimplemented operation CLMULL)
-      if: (runner.os != 'Windows' || contains(matrix.name, 'ARM') == false) && !contains(matrix.name, 'e2kv6')
+      # Don't run tests on Windows ARM
+      if: runner.os != 'Windows' || contains(matrix.name, 'ARM') == false
       run: ctest --verbose -C Release -E benchmark_zlib --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
       env:
         ASAN_OPTIONS: ${{ matrix.asan-options || 'verbosity=0' }}:abort_on_error=1:halt_on_error=1
