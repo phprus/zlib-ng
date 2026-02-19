@@ -671,7 +671,7 @@ jobs:
 
           - name: Ubuntu LCC e2kv6
             os: ubuntu-latest
-            cmake-args: -DWITH_BENCHMARKS=OFF -DBUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v6.2c3.linux-6.1 -DQEMU_CPU=elbrus-v6 -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF
+            cmake-args: -DWITH_BENCHMARKS=ON -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.12.e2k-v6.2c3.linux-6.1 -DQEMU_CPU=elbrus-v6 -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF
             toolchain: 1.29.12.e2k-v6.2c3.linux-6.1
             cflags: -march=elbrus-v6
             cxxflags: -march=elbrus-v6 -DBENCHMARK_HAS_NO_INLINE_ASSEMBLY
@@ -792,22 +792,22 @@ jobs:
         sudo tar -xzf cross-sp-${{ matrix.toolchain }}_64.tgz -C /
         rm -f cross-sp-${{ matrix.toolchain }}_64.tgz
 
-    # Get qemu-e2k-static from github actions cache or download from dev.mcst.ru and save to cache
+    # Get qemu-e2k from github actions cache or download from dev.mcst.ru and save to cache
     - name: Cache MCST QEMU (Ubuntu)
       if: contains(matrix.name, 'e2k')
-      id: cache-qemu-e2k-static
+      id: cache-qemu-e2k
       uses: actions/cache@v5
       with:
-        path: /usr/local/bin/qemu-e2k-static
-        key: cache-qemu-e2k-static-20251226
+        path: /usr/local/bin/qemu-e2k
+        key: cache-qemu-e2k-20260216
 
     - name: Install MCST QEMU (Ubuntu)
-      if: contains(matrix.name, 'e2k') && steps.cache-qemu-e2k-static.outputs.cache-hit != 'true'
+      if: contains(matrix.name, 'e2k') && steps.cache-qemu-e2k.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        wget -q https://dev.mcst.ru/downloads/2025-12-26/qemu-e2k-static
-        chmod +x qemu-e2k-static
-        sudo mv qemu-e2k-static /usr/local/bin
+        wget -q https://git.openelbrus.ru/api/v4/projects/45758/packages/generic/qemu/e2k-1.1/qemu-e2k
+        chmod +x qemu-e2k
+        sudo mv qemu-e2k /usr/local/bin
 
     - name: Initialize Wine
       # Prevent parallel test jobs from initializing Wine at the same time
