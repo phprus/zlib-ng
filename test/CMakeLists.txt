@@ -97,8 +97,10 @@ if(WITH_GTEST)
         # Use older version of Google test to support older versions of GCC
         if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 5.3)
             set(CMAKE_CXX_STANDARD 11)
-        else()
+        elseif ((MSVC AND MSVC_VERSION LESS 1910) OR (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7))
             set(CMAKE_CXX_STANDARD 14)
+        else()
+            set(CMAKE_CXX_STANDARD 17)
         endif()
     endif()
 
@@ -130,8 +132,13 @@ if(WITH_GTEST)
             # Use older version of Google test to support older versions of GCC
             if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 5.3)
                 set(GTEST_TAG release-1.10.0)
-            else()
+            elseif ((MSVC AND MSVC_VERSION LESS 1910) OR (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7))
+                # Google test 1.17 needs at least C++17.
+                # Microsoft VS 140 (aka VS 2015) doesn't enable C++17 by default amd only has partial C++17 support.
+                # So use 1.16 instead.
                 set(GTEST_TAG v1.16.0)
+            else()
+                set(GTEST_TAG v1.17.0)
             endif()
         endif()
 

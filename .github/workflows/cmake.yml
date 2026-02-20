@@ -22,7 +22,7 @@ jobs:
             compiler: gcc
             cxx-compiler: g++
             cxxflags: -Wno-maybe-uninitialized
-            cmake-args: -DWITH_SANITIZER=Address -DWITH_BENCHMARKS=ON
+            cmake-args: -DWITH_SANITIZER=address -DWITH_BENCHMARKS=ON
             codecov: ubuntu_gcc
 
           - name: Ubuntu GCC Native Instructions
@@ -58,7 +58,7 @@ jobs:
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SANITIZER=undefined
             cflags: -O1
             # Skipping codecov to allow -O1
 
@@ -96,48 +96,48 @@ jobs:
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_SSSE3=OFF -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SSSE3=OFF -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=undefined
             codecov: ubuntu_gcc_sse2
 
           - name: Ubuntu GCC SSSE3 UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SSE42=OFF -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=undefined
             codecov: ubuntu_gcc_ssse3
 
           - name: Ubuntu GCC SSE4.2 UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_AVX2=OFF -DWITH_AVX512=OFF -DWITH_SANITIZER=undefined
             codecov: ubuntu_gcc_sse42
 
           - name: Ubuntu GCC No PCLMULQDQ UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_PCLMULQDQ=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_PCLMULQDQ=OFF -DWITH_SANITIZER=undefined
             codecov: ubuntu_gcc_no_pclmulqdq
 
           - name: Ubuntu GCC No AVX512VNNI UBSAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DWITH_AVX512VNNI=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_AVX512VNNI=OFF -DWITH_SANITIZER=undefined
             codecov: ubuntu_gcc_no_avx512vnni
 
           - name: Ubuntu GCC Compat No Opt ASAN
             os: ubuntu-latest
             compiler: gcc
             cxx-compiler: g++
-            cmake-args: -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=Address
+            cmake-args: -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=address
             cflags: -DNOT_TWEAK_COMPILER
             codecov: ubuntu_gcc_compat_no_opt
 
           - name: Ubuntu GCC ARM SF ASAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm.cmake -DWITH_SANITIZER=Address
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm.cmake -DWITH_SANITIZER=address
             asan-options: detect_leaks=0
             packages: qemu-user crossbuild-essential-armel
             gcov-exec: arm-linux-gnueabi-gcov
@@ -145,14 +145,14 @@ jobs:
 
           - name: Ubuntu GCC ARM SF Compat No Opt UBSAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=undefined
             packages: qemu-user crossbuild-essential-armel
             gcov-exec: arm-linux-gnueabi-gcov
             codecov: ubuntu_gcc_armsf_compat_no_opt
 
           - name: Ubuntu GCC ARM HF ASAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DWITH_SANITIZER=Address -DWITH_BENCHMARKS=ON
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DWITH_SANITIZER=address -DWITH_BENCHMARKS=ON
             cxxflags: -Wno-psabi -Wno-maybe-uninitialized
             asan-options: detect_leaks=0
             packages: qemu-user crossbuild-essential-armhf
@@ -161,7 +161,7 @@ jobs:
 
           - name: Ubuntu GCC ARM HF No Neon No ARMv8 ASAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DWITH_NEON=OFF -DWITH_ARMV8=OFF -DWITH_SANITIZER=Address
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DWITH_NEON=OFF -DWITH_ARMV8=OFF -DWITH_SANITIZER=address
             asan-options: detect_leaks=0
             packages: qemu-user crossbuild-essential-armhf
             gcov-exec: arm-linux-gnueabihf-gcov
@@ -169,14 +169,14 @@ jobs:
 
           - name: Ubuntu GCC ARM HF Compat No Opt UBSAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-armhf.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=undefined
             packages: qemu-user crossbuild-essential-armhf
             gcov-exec: arm-linux-gnueabihf-gcov
             codecov: ubuntu_gcc_armhf_compat_no_opt
 
           - name: Ubuntu GCC AARCH64 ASAN
             os: ubuntu-22.04
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-aarch64.cmake -DWITH_SANITIZER=Address -DWITH_BENCHMARKS=ON
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-aarch64.cmake -DWITH_SANITIZER=address -DWITH_BENCHMARKS=ON
             asan-options: detect_leaks=0
             packages: qemu-user gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc-dev-arm64-cross
             gcov-exec: aarch64-linux-gnu-gcov
@@ -184,7 +184,7 @@ jobs:
 
           - name: Ubuntu GCC AARCH64 Compat No Opt UBSAN
             os: ubuntu-22.04
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-aarch64.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=Undefined
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-aarch64.cmake -DZLIB_COMPAT=ON -DWITH_NEW_STRATEGIES=OFF -DWITH_OPTIM=OFF -DWITH_SANITIZER=undefined
             packages: qemu-user gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc-dev-arm64-cross
             gcov-exec: aarch64-linux-gnu-gcov
             codecov: ubuntu_gcc_aarch64_compat_no_opt
@@ -309,7 +309,7 @@ jobs:
 
           - name: Ubuntu GCC S390X ASAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DWITH_SANITIZER=Address -DWITH_BENCHMARKS=ON
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DWITH_SANITIZER=address -DWITH_BENCHMARKS=ON
             asan-options: detect_leaks=0
             packages: qemu-user crossbuild-essential-s390x
             ldflags: -static
@@ -318,7 +318,7 @@ jobs:
 
           - name: Ubuntu GCC S390X No vectorized CRC32 ASAN
             os: ubuntu-latest
-            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DWITH_CRC32_VX=OFF -DWITH_SANITIZER=Address
+            cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DWITH_CRC32_VX=OFF -DWITH_SANITIZER=address
             asan-options: detect_leaks=0
             packages: qemu-user crossbuild-essential-s390x
             ldflags: -static
@@ -331,7 +331,7 @@ jobs:
             cxx-compiler: g++
             cmake-args: >-
               ${{ github.repository != 'zlib-ng/zlib-ng' && '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake' || '' }}
-              -DWITH_DFLTCC_DEFLATE=ON -DWITH_DFLTCC_INFLATE=ON -DWITH_SANITIZER=Address -DWITH_BENCHMARKS=ON
+              -DWITH_DFLTCC_DEFLATE=ON -DWITH_DFLTCC_INFLATE=ON -DWITH_SANITIZER=address -DWITH_BENCHMARKS=ON
             packages: qemu-user gcc-s390x-linux-gnu g++-s390x-linux-gnu libc-dev-s390x-cross
             asan-options: detect_leaks=0
             ldflags: -static
@@ -346,7 +346,7 @@ jobs:
             cxx-compiler: g++
             cmake-args: >-
               ${{ github.repository != 'zlib-ng/zlib-ng' && '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake' || '' }}
-              -DWITH_DFLTCC_DEFLATE=ON -DWITH_DFLTCC_INFLATE=ON -DWITH_SANITIZER=Undefined
+              -DWITH_DFLTCC_DEFLATE=ON -DWITH_DFLTCC_INFLATE=ON -DWITH_SANITIZER=undefined
             packages: qemu-user gcc-s390x-linux-gnu g++-s390x-linux-gnu libc-dev-s390x-cross
             ldflags: -static
             gcov-exec: ${{ github.repository == 'zlib-ng/zlib-ng' && 'gcov' || 's390x-linux-gnu-gcov' }}
@@ -359,7 +359,7 @@ jobs:
             compiler: clang
             cxx-compiler: clang++
             cmake-args: >-
-              ${{ github.repository == 'zlib-ng/zlib-ng' && '-GNinja -DWITH_SANITIZER=Memory' || '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DZLIB_COMPAT=ON' }}
+              ${{ github.repository == 'zlib-ng/zlib-ng' && '-GNinja -DWITH_SANITIZER=memory' || '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-s390x.cmake -DZLIB_COMPAT=ON' }}
               -DWITH_DFLTCC_DEFLATE=ON -DWITH_DFLTCC_INFLATE=ON
             packages: qemu-user gcc-s390x-linux-gnu g++-s390x-linux-gnu libc-dev-s390x-cross
             # The dedicated z15 test VM has 4 cores
@@ -466,7 +466,7 @@ jobs:
             os: ubuntu-latest
             compiler: clang-20
             cxx-compiler: clang++-20
-            cmake-args: -GNinja -DWITH_SANITIZER=Memory
+            cmake-args: -GNinja -DWITH_SANITIZER=memory
             packages: ninja-build clang-20 llvm-20 libclang-rt-20-dev
             gcov-exec: llvm-cov-20 gcov
             # https://github.com/llvm/llvm-project/issues/55785
@@ -551,6 +551,16 @@ jobs:
             cmake-args: -A ARM64
             # codecov disabled for msvc
 
+            # Only ASAN is valid in Windows MSVC
+            # So don't test Undefined,Thread or Memory
+            # See https://learn.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-170
+          - name: Windows MSVC ASAN
+            os: windows-latest
+            compiler: cl
+            cmake-args: -DWITH_SANITIZER=address -A x64
+            build-config: Debug
+            # codecov disabled for msvc
+
           - name: Windows ClangCl Win32
             os: windows-latest
             cmake-args: -T ClangCl -A Win32
@@ -599,14 +609,14 @@ jobs:
             os: macos-15-intel
             compiler: clang
             cxx-compiler: clang++
-            cmake-args: -DWITH_SANITIZER=Address
+            cmake-args: -DWITH_SANITIZER=address
             codecov: macos_clang_intel_asan
 
           - name: macOS GCC (Intel) UBSAN
             os: macos-15-intel
             compiler: gcc-13
             cxx-compiler: g++-13
-            cmake-args: -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SANITIZER=undefined
             packages: gcc@13
             gcov-exec: gcov-13
             codecov: macos_gcc_intel_ubsan
@@ -622,14 +632,14 @@ jobs:
             os: macos-latest
             compiler: clang
             cxx-compiler: clang++
-            cmake-args: -DWITH_SANITIZER=Address
+            cmake-args: -DWITH_SANITIZER=address
             codecov: macos_clang_arm64
 
           - name: macOS GCC (ARM64) UBSAN
             os: macos-14
             compiler: gcc-13
             cxx-compiler: g++-13
-            cmake-args: -DWITH_SANITIZER=Undefined
+            cmake-args: -DWITH_SANITIZER=undefined
             packages: gcc@13
             gcov-exec: gcov-13
             codecov: macos_gcc_arm64_ubsan
@@ -721,6 +731,12 @@ jobs:
         # zlib-ng does not need perl, so simply remove it.
         choco uninstall --no-progress strawberryperl
         choco install --no-progress ninja ${{ matrix.packages }}
+
+    - name: Enable Visual Studio for Windows Sanitizer tests
+      uses: TheMrMilchmann/setup-msvc-dev@v4
+      if: runner.os == 'Windows' && matrix.compiler == 'cl' && contains(matrix.cmake-args, 'WITH_SANITIZER')
+      with:
+        arch: x64
 
     - name: Install Visual Studio toolset v140 (Windows)
       if: contains(matrix.name, 'v140')
@@ -856,7 +872,7 @@ jobs:
     - name: Run test cases
       # Don't run tests on Windows ARM
       if: runner.os != 'Windows' || contains(matrix.name, 'ARM') == false
-      run: ctest --verbose -C Release -E benchmark_zlib --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
+      run: ctest --verbose -C ${{ matrix.build-config || 'Release' }} -E benchmark_zlib --output-on-failure --max-width 120 -j ${{ matrix.parallels-jobs || '3' }}
       env:
         ASAN_OPTIONS: ${{ matrix.asan-options || 'verbosity=0' }}:abort_on_error=1:halt_on_error=1
         MSAN_OPTIONS: ${{ matrix.msan-options || 'verbosity=0' }}:abort_on_error=1:halt_on_error=1
