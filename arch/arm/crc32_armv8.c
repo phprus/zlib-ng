@@ -8,63 +8,47 @@
 
 #include "zbuild.h"
 #include "acle_intrins.h"
+#include "crc32_armv8_p.h"
 
 Z_INTERNAL Z_TARGET_CRC uint32_t crc32_armv8(uint32_t crc, const uint8_t *buf, size_t len) {
     uint32_t c = ~crc;
 
     if (UNLIKELY(len == 1)) {
         c = __crc32b(c, *buf);
-        c = ~c;
-        return c;
+        return ~c;
     }
 
-    uintptr_t align_diff = ALIGN_DIFF(buf, 8);
+    /* Align to 8-byte boundary for tail processing */
+    uintptr_t align_diff = MIN(ALIGN_DIFF(buf, 8), len);
     if (align_diff) {
-        if (len && (align_diff & 1)) {
-            c = __crc32b(c, *buf++);
-            len--;
-        }
+        c = crc32_armv8_align(c, NULL, buf, align_diff, 0);
 
-        if (len >= 2 && (align_diff & 2)) {
-            c = __crc32h(c, *((uint16_t*)buf));
-            buf += 2;
-            len -= 2;
-        }
-
-        if (len >= 4 && (align_diff & 4)) {
-            c = __crc32w(c, *((uint32_t*)buf));
-            len -= 4;
-            buf += 4;
-        }
+        buf += align_diff;
+        len -= align_diff;
     }
 
-    while (len >= 8) {
-        c = __crc32d(c, *((uint64_t*)buf));
-        len -= 8;
-        buf += 8;
-    }
-
-    if (len & 4) {
-        c = __crc32w(c, *((uint32_t*)buf));
-        buf += 4;
-    }
-
-    if (len & 2) {
-        c = __crc32h(c, *((uint16_t*)buf));
-        buf += 2;
-    }
-
-    if (len & 1) {
-        c = __crc32b(c, *buf);
-    }
-
-    c = ~c;
-    return c;
+    return crc32_armv8_tail(c, NULL, buf, len, 0);
 }
 
 Z_INTERNAL Z_TARGET_CRC uint32_t crc32_copy_armv8(uint32_t crc, uint8_t *dst, const uint8_t *src, size_t len) {
-    crc = crc32_armv8(crc, src, len);
-    memcpy(dst, src, len);
-    return crc;
+    uint32_t c = ~crc;
+
+    if (UNLIKELY(len == 1)) {
+        *dst = *src;
+        c = __crc32b(c, *src);
+        return ~c;
+    }
+
+    /* Align to 8-byte boundary for tail processing */
+    uintptr_t align_diff = MIN(ALIGN_DIFF(src, 8), len);
+    if (align_diff) {
+        c = crc32_armv8_align(c, dst, src, align_diff, 1);
+
+        dst += align_diff;
+        src += align_diff;
+        len -= align_diff;
+    }
+
+    return crc32_armv8_tail(c, dst, src, len, 1);
 }
 #endif
