@@ -68,10 +68,13 @@ static inline uint64x2_t crc_shift(uint32_t crc, size_t nbytes) {
   return clmul_scalar(crc, xnmodp(nbytes * 8 - 33));
 }
 
-Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, const uint8_t *buf, size_t len) {
+Z_FORCEINLINE static Z_TARGET_PMULL_EOR3 uint32_t crc32_copy_impl(uint32_t crc, uint8_t *dst, const uint8_t *buf,
+                                                                  size_t len, const int COPY) {
     uint32_t crc0 = ~crc;
 
     if (UNLIKELY(len == 1)) {
+        if (COPY)
+            *dst = *buf;
         crc0 = __crc32b(crc0, *buf);
         return ~crc0;
     }
@@ -79,42 +82,58 @@ Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, con
     /* Align to 16-byte boundary for vector path */
     uintptr_t align_diff = MIN(ALIGN_DIFF(buf, 16), len);
     if (align_diff) {
-        crc0 = crc32_armv8_align(crc0, NULL, buf, align_diff, 0);
+        crc0 = crc32_armv8_align(crc0, dst, buf, align_diff, COPY);
 
+        if (COPY)
+            dst += align_diff;
         buf += align_diff;
         len -= align_diff;
     }
 
     /* 3-way scalar CRC + 9-way PMULL folding (192 bytes/iter) */
     if (len >= 192) {
+        size_t blk = len / 192;                   /* Number of 192-byte blocks */
+        size_t klen = blk * 16;                   /* Scalar stride per CRC lane */
         const uint8_t *end = buf + len;
-        size_t blk = len / 192;                  /* Number of 192-byte blocks */
-        size_t klen = blk * 16;                  /* Scalar stride per CRC lane */
-        const uint8_t *buf2 = buf + klen * 3;    /* Vector data starts after scalar lanes */
+        const uint8_t *src0 = buf;
+        const uint8_t *src1 = buf + klen;
+        const uint8_t *src2 = buf + klen * 2;
+        const uint8_t *srcv = buf + klen * 3;     /* Vector data starts after scalar lanes */
         uint32_t crc1 = 0, crc2 = 0;
         uint64x2_t vc0, vc1, vc2;
         uint64_t vc;
 
         /* Load first 9 vector chunks (144 bytes) */
-        uint64x2_t x0 = vld1q_u64((const uint64_t*)buf2), y0;
-        uint64x2_t x1 = vld1q_u64((const uint64_t*)(buf2 + 16)), y1;
-        uint64x2_t x2 = vld1q_u64((const uint64_t*)(buf2 + 32)), y2;
-        uint64x2_t x3 = vld1q_u64((const uint64_t*)(buf2 + 48)), y3;
-        uint64x2_t x4 = vld1q_u64((const uint64_t*)(buf2 + 64)), y4;
-        uint64x2_t x5 = vld1q_u64((const uint64_t*)(buf2 + 80)), y5;
-        uint64x2_t x6 = vld1q_u64((const uint64_t*)(buf2 + 96)), y6;
-        uint64x2_t x7 = vld1q_u64((const uint64_t*)(buf2 + 112)), y7;
-        uint64x2_t x8 = vld1q_u64((const uint64_t*)(buf2 + 128)), y8;
+        uint64x2_t x0 = vld1q_u64((const uint64_t*)srcv), y0;
+        uint64x2_t x1 = vld1q_u64((const uint64_t*)(srcv + 16)), y1;
+        uint64x2_t x2 = vld1q_u64((const uint64_t*)(srcv + 32)), y2;
+        uint64x2_t x3 = vld1q_u64((const uint64_t*)(srcv + 48)), y3;
+        uint64x2_t x4 = vld1q_u64((const uint64_t*)(srcv + 64)), y4;
+        uint64x2_t x5 = vld1q_u64((const uint64_t*)(srcv + 80)), y5;
+        uint64x2_t x6 = vld1q_u64((const uint64_t*)(srcv + 96)), y6;
+        uint64x2_t x7 = vld1q_u64((const uint64_t*)(srcv + 112)), y7;
+        uint64x2_t x8 = vld1q_u64((const uint64_t*)(srcv + 128)), y8;
         uint64x2_t k;
         /* k = {x^144 mod P, x^144+64 mod P} for 144-byte fold */
         { static const uint64_t ALIGNED_(16) k_[] = {0x26b70c3d, 0x3f41287a}; k = vld1q_u64(k_); }
-        buf2 += 144;
+
+        /* Per-region dst pointers */
+        uint8_t *dst0 = dst;
+        uint8_t *dst1 = dst + klen;
+        uint8_t *dst2 = dst + klen * 2;
+        uint8_t *dst_v = dst + klen * 3;
+
+        if (COPY) {
+            memcpy(dst_v, srcv, 144);
+            dst_v += 144;
+        }
+        srcv += 144;
 
         /* Fold 9 vectors + 3-way parallel scalar CRC */
         if (blk > 1) {
             /* Only form a limit pointer when we have at least 2 blocks. */
-            const uint8_t *limit = buf + klen - 32;
-            while (buf <= limit) {
+            const uint8_t *limit = src0 + klen - 32;
+            while (src0 <= limit) {
                 /* Fold all 9 vector lanes using PMULL */
                 y0 = clmul_lo(x0, k), x0 = clmul_hi(x0, k);
                 y1 = clmul_lo(x1, k), x1 = clmul_hi(x1, k);
@@ -127,25 +146,43 @@ Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, con
                 y8 = clmul_lo(x8, k), x8 = clmul_hi(x8, k);
 
                 /* EOR3: combine hi*k, lo*k, and new data in one instruction */
-                x0 = veor3q_u64(x0, y0, vld1q_u64((const uint64_t*)buf2));
-                x1 = veor3q_u64(x1, y1, vld1q_u64((const uint64_t*)(buf2 + 16)));
-                x2 = veor3q_u64(x2, y2, vld1q_u64((const uint64_t*)(buf2 + 32)));
-                x3 = veor3q_u64(x3, y3, vld1q_u64((const uint64_t*)(buf2 + 48)));
-                x4 = veor3q_u64(x4, y4, vld1q_u64((const uint64_t*)(buf2 + 64)));
-                x5 = veor3q_u64(x5, y5, vld1q_u64((const uint64_t*)(buf2 + 80)));
-                x6 = veor3q_u64(x6, y6, vld1q_u64((const uint64_t*)(buf2 + 96)));
-                x7 = veor3q_u64(x7, y7, vld1q_u64((const uint64_t*)(buf2 + 112)));
-                x8 = veor3q_u64(x8, y8, vld1q_u64((const uint64_t*)(buf2 + 128)));
+                x0 = veor3q_u64(x0, y0, vld1q_u64((const uint64_t*)srcv));
+                x1 = veor3q_u64(x1, y1, vld1q_u64((const uint64_t*)(srcv + 16)));
+                x2 = veor3q_u64(x2, y2, vld1q_u64((const uint64_t*)(srcv + 32)));
+                x3 = veor3q_u64(x3, y3, vld1q_u64((const uint64_t*)(srcv + 48)));
+                x4 = veor3q_u64(x4, y4, vld1q_u64((const uint64_t*)(srcv + 64)));
+                x5 = veor3q_u64(x5, y5, vld1q_u64((const uint64_t*)(srcv + 80)));
+                x6 = veor3q_u64(x6, y6, vld1q_u64((const uint64_t*)(srcv + 96)));
+                x7 = veor3q_u64(x7, y7, vld1q_u64((const uint64_t*)(srcv + 112)));
+                x8 = veor3q_u64(x8, y8, vld1q_u64((const uint64_t*)(srcv + 128)));
+                if (COPY) {
+                    memcpy(dst_v, srcv, 144);
+                    dst_v += 144;
+                }
 
                 /* 3-way parallel scalar CRC (16 bytes each) */
-                crc0 = __crc32d(crc0, *(const uint64_t*)buf);
-                crc1 = __crc32d(crc1, *(const uint64_t*)(buf + klen));
-                crc2 = __crc32d(crc2, *(const uint64_t*)(buf + klen * 2));
-                crc0 = __crc32d(crc0, *(const uint64_t*)(buf + 8));
-                crc1 = __crc32d(crc1, *(const uint64_t*)(buf + klen + 8));
-                crc2 = __crc32d(crc2, *(const uint64_t*)(buf + klen * 2 + 8));
-                buf += 16;
-                buf2 += 144;
+                if (COPY) {
+                    memcpy(dst0, src0, 16);
+                    dst0 += 16;
+                }
+                crc0 = __crc32d(crc0, *(const uint64_t*)src0);
+                crc0 = __crc32d(crc0, *(const uint64_t*)(src0 + 8));
+                if (COPY) {
+                    memcpy(dst1, src1, 16);
+                    dst1 += 16;
+                }
+                crc1 = __crc32d(crc1, *(const uint64_t*)src1);
+                crc1 = __crc32d(crc1, *(const uint64_t*)(src1 + 8));
+                if (COPY) {
+                    memcpy(dst2, src2, 16);
+                    dst2 += 16;
+                }
+                crc2 = __crc32d(crc2, *(const uint64_t*)src2);
+                crc2 = __crc32d(crc2, *(const uint64_t*)(src2 + 8));
+                src0 += 16;
+                src1 += 16;
+                src2 += 16;
+                srcv += 144;
             }
         }
 
@@ -179,12 +216,18 @@ Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, con
         x0 = veor3q_u64(x0, y0, x4);
 
         /* Process final scalar chunk */
-        crc0 = __crc32d(crc0, *(const uint64_t*)buf);
-        crc1 = __crc32d(crc1, *(const uint64_t*)(buf + klen));
-        crc2 = __crc32d(crc2, *(const uint64_t*)(buf + klen * 2));
-        crc0 = __crc32d(crc0, *(const uint64_t*)(buf + 8));
-        crc1 = __crc32d(crc1, *(const uint64_t*)(buf + klen + 8));
-        crc2 = __crc32d(crc2, *(const uint64_t*)(buf + klen * 2 + 8));
+        if (COPY)
+            memcpy(dst0, src0, 16);
+        crc0 = __crc32d(crc0, *(const uint64_t*)src0);
+        crc0 = __crc32d(crc0, *(const uint64_t*)(src0 + 8));
+        if (COPY)
+            memcpy(dst1, src1, 16);
+        crc1 = __crc32d(crc1, *(const uint64_t*)src1);
+        crc1 = __crc32d(crc1, *(const uint64_t*)(src1 + 8));
+        if (COPY)
+            memcpy(dst2, src2, 16);
+        crc2 = __crc32d(crc2, *(const uint64_t*)src2);
+        crc2 = __crc32d(crc2, *(const uint64_t*)(src2 + 8));
 
         /* Shift and combine 3 scalar CRCs */
         vc0 = crc_shift(crc0, klen * 2 + blk * 144);
@@ -195,23 +238,47 @@ Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, con
         /* Final reduction: 128-bit vector + scalar CRCs -> 32-bit */
         crc0 = __crc32d(0, vgetq_lane_u64(x0, 0));
         crc0 = __crc32d(crc0, vc ^ vgetq_lane_u64(x0, 1));
-        buf = buf2;
-        len = end - buf;
+        if (COPY)
+            dst += blk * 192;
+        buf = srcv;
+        len = end - srcv;
     }
 
     /* 3-way scalar CRC (24 bytes/iter) */
     if (len >= 80) {
         size_t klen = ((len - 8) / 24) * 8;   /* Stride for 3-way parallel */
+        const uint8_t *buf0 = buf;
+        const uint8_t *buf1 = buf + klen;
+        const uint8_t *buf2 = buf + klen * 2;
         uint32_t crc1 = 0, crc2 = 0;
         uint64x2_t vc0, vc1;
         uint64_t vc;
 
+        /* Per-lane dst pointers */
+        uint8_t *dst0 = dst;
+        uint8_t *dst1 = dst + klen;
+        uint8_t *dst2 = dst + klen * 2;
+
         /* 3-way parallel scalar CRC */
         do {
-            crc0 = __crc32d(crc0, *(const uint64_t*)buf);
-            crc1 = __crc32d(crc1, *(const uint64_t*)(buf + klen));
-            crc2 = __crc32d(crc2, *(const uint64_t*)(buf + klen * 2));
-            buf += 8;
+            if (COPY) {
+                memcpy(dst0, buf0, 8);
+                dst0 += 8;
+            }
+            crc0 = __crc32d(crc0, *(const uint64_t*)buf0);
+            if (COPY) {
+                memcpy(dst1, buf1, 8);
+                dst1 += 8;
+            }
+            crc1 = __crc32d(crc1, *(const uint64_t*)buf1);
+            if (COPY) {
+                memcpy(dst2, buf2, 8);
+                dst2 += 8;
+            }
+            crc2 = __crc32d(crc2, *(const uint64_t*)buf2);
+            buf0 += 8;
+            buf1 += 8;
+            buf2 += 8;
             len -= 24;
         } while (len >= 32);
 
@@ -221,20 +288,25 @@ Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, con
         vc = vgetq_lane_u64(veorq_u64(vc0, vc1), 0);
 
         /* Process final 8 bytes with combined CRC */
-        buf += klen * 2;
         crc0 = crc2;
-        crc0 = __crc32d(crc0, *(const uint64_t*)buf ^ vc);
-        buf += 8;
+        if (COPY)
+            memcpy(dst2, buf2, 8);
+        crc0 = __crc32d(crc0, *(const uint64_t*)buf2 ^ vc);
+        buf = buf2 + 8;
         len -= 8;
+        if (COPY)
+            dst = dst2 + 8;
     }
 
     /* Process remaining bytes */
-    return crc32_armv8_tail(crc0, NULL, buf, len, 0);
+    return crc32_armv8_tail(crc0, dst, buf, len, COPY);
+}
+
+Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_armv8_pmull_eor3(uint32_t crc, const uint8_t *buf, size_t len) {
+    return crc32_copy_impl(crc, NULL, buf, len, 0);
 }
 
 Z_INTERNAL Z_TARGET_PMULL_EOR3 uint32_t crc32_copy_armv8_pmull_eor3(uint32_t crc, uint8_t *dst, const uint8_t *src, size_t len) {
-    crc = crc32_armv8_pmull_eor3(crc, src, len);
-    memcpy(dst, src, len);
-    return crc;
+    return crc32_copy_impl(crc, dst, src, len, 1);
 }
 #endif
