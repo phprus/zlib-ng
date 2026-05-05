@@ -1,6 +1,6 @@
 # Export configurable variables for the try_compile() command.
 set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES COMPILER_SUFFIX)
-
+#new
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR loongarch64)
 set(CMAKE_SYSTEM_VERSION 1)
