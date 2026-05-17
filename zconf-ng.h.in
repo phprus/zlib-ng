@@ -94,6 +94,15 @@
 /* Conditional exports */
 #define ZNG_CONDEXPORT Z_EXPORT
 
+/* Symbol versioning */
+#define ZNG_STRING(s) #s
+
+#if defined(__APPLE__)
+#  define ZNG_SYMBOL_ALIAS(symbol, suffix) __asm("_" ZNG_STRING(symbol) suffix)
+#else
+#  define ZNG_SYMBOL_ALIAS(symbol, suffix)
+#endif
+
 /* Fallback for something that includes us. */
 typedef unsigned char Byte;
 typedef Byte Bytef;
