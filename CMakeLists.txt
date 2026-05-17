@@ -273,8 +273,8 @@ elseif(MSVC)
             -D__SSE2__=1
         )
     endif()
-elseif(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "NVHPC")
-    # Enable warnings in GCC and Clang
+elseif(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "NVHPC" OR CMAKE_C_COMPILER_ID MATCHES "LCC")
+    # Enable warnings in GCC, Clang, NVHPC and LCC
     set(WARNFLAGS -Wall)
     set(WARNFLAGS_MAINTAINER -Wextra -Werror)
     set(WARNFLAGS_DISABLE)
