@@ -21,7 +21,12 @@ unsigned long Z_EXPORT adler32(unsigned long adler, const unsigned char *buf, un
 #endif
 
 #ifndef ZLIB_COMPAT
-#  if defined(HAVE_SYMVER)
+#  if defined(HAVE_SYMVER) || defined(__APPLE__)
+
+// Declare all functions with aliases for Apple
+uint32_t Z_EXPORT zng_adler32_sizet(uint32_t adler, const unsigned char *buf, size_t len) ZNG_SYMBOL_ALIAS(zng_adler32, "$SIZE_T");
+uint32_t Z_EXPORT zng_adler32_uint32(uint32_t adler, const unsigned char *buf, uint32_t len) ZNG_SYMBOL_ALIAS(zng_adler32, "");
+
 // Preferred function
 ZSYMVER_DEF(zng_adler32_sizet, zng_adler32, "ZLIB_NG_2.4.0")
 uint32_t Z_EXPORT zng_adler32_sizet(uint32_t adler, const unsigned char *buf, size_t len) {

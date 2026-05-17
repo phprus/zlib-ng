@@ -1689,7 +1689,7 @@ void zng_gzclearerr(gzFile file);
 */
 
 Z_EXTERN Z_EXPORT
-uint32_t zng_adler32(uint32_t adler, const uint8_t *buf, size_t len);
+uint32_t zng_adler32(uint32_t adler, const uint8_t *buf, size_t len) ZNG_SYMBOL_ALIAS(zng_adler32, "$SIZE_T");
 /*
      Update a running Adler-32 checksum with the bytes buf[0..len-1] and
    return the updated checksum. An Adler-32 value is in the range of a 32-bit
@@ -1721,7 +1721,7 @@ uint32_t zng_adler32_combine(uint32_t adler1, uint32_t adler2, z_off64_t len2);
 */
 
 Z_EXTERN Z_EXPORT
-uint32_t zng_crc32(uint32_t crc, const uint8_t *buf, size_t len);
+uint32_t zng_crc32(uint32_t crc, const uint8_t *buf, size_t len) ZNG_SYMBOL_ALIAS(zng_crc32, "$SIZE_T");
 /*
      Update a running CRC-32 with the bytes buf[0..len-1] and return the
    updated CRC-32. A CRC-32 value is in the range of a 32-bit unsigned integer.

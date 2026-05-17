@@ -41,7 +41,12 @@ Z_EXPORT unsigned long crc32(unsigned long crc, const unsigned char *buf, unsign
 #endif
 
 #ifndef ZLIB_COMPAT
-#  if defined(HAVE_SYMVER)
+#  if defined(HAVE_SYMVER) || defined(__APPLE__)
+
+// Declare all functions with aliases for Apple
+Z_EXPORT uint32_t zng_crc32_sizet(uint32_t crc, const unsigned char *buf, size_t len) ZNG_SYMBOL_ALIAS(zng_crc32, "$SIZE_T");
+Z_EXPORT uint32_t zng_crc32_uint32(uint32_t crc, const unsigned char *buf, uint32_t len) ZNG_SYMBOL_ALIAS(zng_crc32, "");
+
 // Preferred function
 ZSYMVER_DEF(zng_crc32_sizet, zng_crc32, "ZLIB_NG_2.4.0")
 Z_EXPORT uint32_t zng_crc32_sizet(uint32_t crc, const unsigned char *buf, size_t len) {
