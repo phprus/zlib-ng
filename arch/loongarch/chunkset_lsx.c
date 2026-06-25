@@ -21,6 +21,10 @@ typedef __m128i chunk_t;
 #define HAVE_CHUNK_MAG
 
 
+static inline void chunkmemset_1(uint8_t *from, chunk_t *chunk) {
+    *chunk = __lsx_vreplgr2vr_b(*from);
+}
+
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
     *chunk = __lsx_vreplgr2vr_h(zng_memread_2(from));
 }

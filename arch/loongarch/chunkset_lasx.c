@@ -18,12 +18,17 @@
 typedef __m256i chunk_t;
 typedef __m128i halfchunk_t;
 
+#define HAVE_CHUNKMEMSET_1
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
 #define HAVE_CHUNKMEMSET_8
 #define HAVE_CHUNKMEMSET_16
 #define HAVE_CHUNK_MAG
 #define HAVE_HALF_CHUNK
+
+static inline void chunkmemset_1(uint8_t *from, chunk_t *chunk) {
+    *chunk = __lasx_xvreplgr2vr_b(*from);
+}
 
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
     *chunk = __lasx_xvreplgr2vr_h(zng_memread_2(from));
