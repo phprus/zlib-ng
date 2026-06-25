@@ -27,19 +27,19 @@ typedef __m128i halfchunk_t;
 #define HAVE_HALF_CHUNK
 
 static inline void chunkmemset_1(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lasx_xvreplgr2vr_b(*from);
+    *chunk = __lasx_xvldrepl_b(from, 0);
 }
 
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lasx_xvreplgr2vr_h(zng_memread_2(from));
+    *chunk = __lasx_xvldrepl_h(from, 0);
 }
 
 static inline void chunkmemset_4(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lasx_xvreplgr2vr_w(zng_memread_4(from));
+    *chunk = __lasx_xvldrepl_w(from, 0);
 }
 
 static inline void chunkmemset_8(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lasx_xvreplgr2vr_d(zng_memread_8(from));
+    *chunk = __lasx_xvldrepl_d(from, 0);
 }
 
 static inline void chunkmemset_16(uint8_t *from, chunk_t *chunk) {

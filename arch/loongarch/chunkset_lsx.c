@@ -15,6 +15,7 @@
 
 typedef __m128i chunk_t;
 
+#define HAVE_CHUNKMEMSET_1
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
 #define HAVE_CHUNKMEMSET_8
@@ -22,19 +23,19 @@ typedef __m128i chunk_t;
 
 
 static inline void chunkmemset_1(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lsx_vreplgr2vr_b(*from);
+    *chunk = __lsx_vldrepl_b(from, 0);
 }
 
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lsx_vreplgr2vr_h(zng_memread_2(from));
+    *chunk = __lsx_vldrepl_h(from, 0);
 }
 
 static inline void chunkmemset_4(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lsx_vreplgr2vr_w(zng_memread_4(from));
+    *chunk = __lsx_vldrepl_w(from, 0);
 }
 
 static inline void chunkmemset_8(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lsx_vreplgr2vr_d(zng_memread_8(from));
+    *chunk = __lsx_vldrepl_d(from, 0);
 }
 
 static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
