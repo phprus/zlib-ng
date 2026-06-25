@@ -15,16 +15,11 @@
 
 typedef __m128i chunk_t;
 
-#define HAVE_CHUNKMEMSET_1
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
 #define HAVE_CHUNKMEMSET_8
 #define HAVE_CHUNK_MAG
 
-
-static inline void chunkmemset_1(uint8_t *from, chunk_t *chunk) {
-    *chunk = __lsx_vldrepl_b(from, 0);
-}
 
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
     *chunk = __lsx_vldrepl_h(from, 0);
