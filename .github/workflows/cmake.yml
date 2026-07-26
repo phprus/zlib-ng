@@ -735,6 +735,14 @@ jobs:
             cmake-args: -DWITH_NATIVE_INSTRUCTIONS=ON
             coverage: macos_clang_arm64_native
 
+          - name: macOS LLVM Clang (ARM64)
+            os: macos-latest
+            compiler: /opt/homebrew/opt/llvm/bin/clang
+            cxx-compiler: /opt/homebrew/opt/llvm/bin/clang++
+            packages: llvm lld
+            gcov-exec: /opt/homebrew/opt/llvm/bin/llvm-cov gcov
+            coverage: macos_llvm_clang_arm64
+
           - name: Ubuntu LCC e2kv4
             os: ubuntu-latest
             cmake-args: -DWITH_BENCHMARKS=ON -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-e2k-lcc.cmake -DMCST_LCC_PREFIX=/opt/mcst/lcc-1.29.16.e2k-v4.linux-6.1 -DQEMU_CPU=elbrus-v4 -DBENCHMARK_ENABLE_WERROR=OFF -DBENCHMARK_FORCE_WERROR=OFF
